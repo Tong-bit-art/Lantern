@@ -134,9 +134,10 @@ diff -r upstream/src/Filee.Core/Policy src/Lantern.Core/Policy 2>&1 | head -1
 
 ## Timestamps and history
 
-The repository has three commits:
+The repository has four commits:
 
 ```
+a17d548  Correct the history section of the originality statement
 dac35df  Add conversion policy engine and its test suite
 b6a44ed  Rename Filee to Lantern across the tree
 d185564  Import Filee 2.4.0 baseline (upstream 47e24cd3)
