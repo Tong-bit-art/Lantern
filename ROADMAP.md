@@ -5,8 +5,13 @@ maintainer may close one without replacing it.
 
 ## Now
 
-- **Make CI trustworthy.** The workflow inherited from upstream has never passed on this
-  repository. Get one green run on `main`, then put the status badge back in the README.
+- **Make CI trustworthy.** The workflow inherited from upstream has never fully passed on this
+  repository. Two jobs fail for a reason that is not code: `build (win-arm64)` fails at *Fetch engines
+  for engine tests* and `portable / Linux native linux-x64` at *Build dependencies*, because both fetch
+  engine binaries from `dl.lantern.sh` — a domain this fork does not own, whose host is currently a
+  parked page. Fixing that means either hosting the pinned engine artifacts somewhere real, or making
+  those jobs skip the fetch and run a reduced test set. Until one of those lands, CI will stay red on
+  those two jobs and there will be no status badge on the README.
 - **Ship `v1.0.0`.** A source-only release with checksums, so the download and version badges stop
   being lies. No installer until there is something meaningful to install.
 - **Keep the format count honest.** The README and the repository description say 280, derived from
