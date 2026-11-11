@@ -15,7 +15,7 @@ The command is `lantern` on every OS. If the shell can't find it, Lantern may be
 lantern version
 ```
 
-It prints something like `lantern 2.2.0` and exits with 0. If the command doesn't exist and you can't find the install, tell the user to download Lantern from https://lantern.sh and stop.
+It prints something like `lantern 1.0.0` and exits with 0. If the command doesn't exist and you can't find the install, tell the user to build Lantern from https://github.com/Tong-bit-art/Lantern and stop.
 
 ## 2. Check the conversion first
 

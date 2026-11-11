@@ -1,266 +1,235 @@
-<p align="center">
-  <a href="https://lantern.sh"><img src="docs/media/banner-en.jpg" alt="Lantern: Drag. Drop. Converted." width="100%"></a>
-</p>
+# Lantern
 
-<p align="center">
-  <b>A free, open-source file converter you use by dragging.</b><br>
-  Hold a key (<kbd>Ctrl</kbd>, <kbd>Option</kbd> on macOS), drag files and drop them on a format in the donut that opens at your cursor.
-</p>
+**A file converter that lets you write down how your batch should be handled, once, and doesn't
+make you re-decide it every time.**
 
-<p align="center">
-  <a href="https://lantern.sh"><b>Website</b></a> ·
-  <a href="https://github.com/Tong-bit-art/Lantern/releases/latest"><b>Download</b></a> ·
-  <a href="https://www.linkedin.com/company/lantern-sh/"><b>LinkedIn</b></a> ·
-  <a href="#install">Install</a> ·
-  <a href="#command-line">Command line</a> ·
-  <a href="#development">Development</a>
-</p>
+Drag files onto a format. The conversion happens on your machine. The result lands next to the
+original.
 
-<p align="center">
-  <a href="https://github.com/Tong-bit-art/Lantern/actions/workflows/ci.yml"><img src="https://github.com/Tong-bit-art/Lantern/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/Tong-bit-art/Lantern/releases/latest"><img src="https://img.shields.io/github/v/release/Tong-bit-art/Lantern?color=7F77DD&label=release" alt="Latest release"></a>
-  <a href="https://github.com/Tong-bit-art/Lantern/releases"><img src="https://img.shields.io/github/downloads/Tong-bit-art/Lantern/total?color=1D9E75" alt="Downloads"></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-3C3489" alt="Windows 10 | 11">
-  <img src="https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-3C3489" alt="Linux x64 | ARM64">
-  <img src="https://img.shields.io/badge/macOS-preview-534AB7" alt="macOS preview">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6A62C9" alt="MIT license"></a>
-</p>
+Lantern is a fork of [Filee](https://github.com/KnifeLemon/Filee). What is new here is a rules
+layer on top of the converter: instead of configuring each file by hand, you describe the policy
+once and the engine applies it to everything you drop.
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/276987"><img src="https://trendshift.io/api/badge/trendshift/repositories/276987/weekly?language=C%23&v=2" alt="Lantern: #1 C# repository of the week on Trendshift" width="250" height="55"></a>
-  <a href="https://trendshift.io/repositories/276987"><img src="https://trendshift.io/api/badge/trendshift/repositories/276987/daily?language=C%23&v=2" alt="Lantern: #1 C# repository of the day on Trendshift" width="250" height="55"></a>
-  <a href="https://hellogithub.com/repository/Tong-bit-art/Lantern" target="_blank"><img src="https://abroad.hellogithub.com/v1/widgets/recommend.svg?rid=0847caedd5bd4077a70b90f83afdf83c&claim_uid=jAlIvVMhn0kcEsU" alt="Featured｜HelloGitHub" width="250" height="54" /></a>
-</p>
+> **Status: source only, v1.0.0.** No release has been published yet, so there is nothing to
+> download — build it from source with the steps below. There is also no code-signing certificate
+> and no update signing key, which means: if you build a Windows installer yourself, SmartScreen
+> will warn about it, and the auto-updater is inert until those are provisioned. Both are stated
+> here rather than buried, because a project page that claims more than it has is worse than a
+> short one.
 
-<p align="center">
-  <b>English</b> ·
-  <a href="docs/readme/README.es.md">Español</a> ·
-  <a href="docs/readme/README.ja.md">日本語</a> ·
-  <a href="docs/readme/README.ko.md">한국어</a> ·
-  <a href="docs/readme/README.zh-CN.md">简体中文</a> ·
-  <a href="docs/readme/README.zh-TW.md">繁體中文</a> ·
-  <a href="docs/readme/README.pl.md">Polski</a> ·
-  <a href="docs/readme/README.hi.md">हिन्दी</a> ·
-  <a href="docs/readme/README.ru.md">Русский</a> ·
-  <a href="docs/readme/README.ar.md">العربية</a> ·
-  <a href="docs/readme/README.fa.md">فارسی</a> ·
-  <a href="docs/readme/README.pt-BR.md">Português (Brasil)</a> ·
-  <a href="docs/readme/README.pt-PT.md">Português (Portugal)</a> ·
-  <a href="docs/readme/README.fr.md">Français</a> ·
-  <a href="docs/readme/README.th.md">ไทย</a> ·
-  <a href="docs/readme/README.tr.md">Türkçe</a> ·
-  <a href="docs/readme/README.id.md">Bahasa Indonesia</a> ·
-  <a href="docs/readme/README.it.md">Italiano</a> ·
-  <a href="docs/readme/README.bn-BD.md">বাংলা</a>
-</p>
+---
 
-<table>
-  <tr>
-    <td width="33%" valign="top">
-      <b>Right at your cursor</b><br>
-      No app window to open.
-      The formats appear where you already are, only the ones that make sense for the files you drag.
-    </td>
-    <td width="33%" valign="top">
-      <b>270 formats, no other software</b><br>
-      Images, PDF, Word, Excel, PowerPoint, HWP, e-books, archives, fonts, CAD, 3D models and geospatial data work without Office, Hancom Office or LibreOffice.
-    </td>
-    <td width="33%" valign="top">
-      <b>Stays on your computer</b><br>
-      Nothing is uploaded.
-      Lantern works offline and saves the result next to the original.
-    </td>
-  </tr>
-</table>
+## Why the rules layer exists
 
-## See it in action
+A converter normally decides *what a file becomes*. It does not decide *how a whole batch should
+be treated*. Those are different problems, and the second one is where batch work actually hurts.
 
-<p align="center">
-  <a href="https://lantern.sh"><img src="docs/media/demo-en.webp" alt="Dragging trip.jpg with Ctrl held: a donut of formats opens at the cursor, the file is dropped on PNG, a progress ring completes and trip.png appears" width="820"></a><br>
-  <sub>Watch the 27-second video and try the interactive demo on <a href="https://lantern.sh">lantern.sh</a></sub>
-</p>
+Four things the preset model cannot express, and this fork can:
 
-## Install
+**Per-file-type defaults in one pass.** Your camera writes HEIC and your screenshot tool writes
+PNG. You want the first kept at quality 92 and the second crushed to WEBP at 82. Without rules
+that is two selections, two drags, every single time.
 
-Download from [Releases](https://github.com/Tong-bit-art/Lantern/releases/latest).
+**Decisions that depend on the size of the drop.** "If this drop contains more than a dozen office
+documents, they are a paperwork stack — merge them into one PDF instead of converting twelve
+separate files." A preset sees one file and has no idea how many siblings it has. A rule sees
+`request.batch_count`.
 
-<a href="https://apps.microsoft.com/detail/XPDCN05L89WS0C?referrer=appbadge&cid=github&mode=full"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Microsoft Store" width="200"></a>
+**An answer to "why did it do that".** When a file comes out in a format you did not expect,
+something has to tell you which setting won. Every decision here produces a line-by-line account:
+which rules matched, what each test compared, which value survived.
 
-Or with WinGet:
+**Guard rails that cannot be overridden by accident.** A batch tool's worst failure mode is
+overwriting originals. The shipped policy refuses any conversion whose output would land on its own
+source, and the rule is *sealed* — a rule you add later, even at priority 99999, cannot outrank it.
 
-```powershell
-winget install Tong-bit-art.Lantern
+## The policy file
+
+Rules live in `policy.json` in the app's data directory. The default is the platform's
+application-data folder plus `Lantern` (`%APPDATA%\Lantern` on Windows; on Linux and macOS it
+follows `Environment.SpecialFolder.ApplicationData`, which resolves to `$XDG_CONFIG_HOME/Lantern`
+or `~/.config/Lantern`). Setting the `LANTERN_DATA_DIR` environment variable overrides it, which is
+also how a development copy keeps its policy separate from the one you actually run.
+
+```jsonc
+{
+  "name": "default",
+  "rules": [
+    {
+      "id": "photo-quality",
+      "description": "Camera originals keep their quality",
+      "priority": 50,
+      "when": {
+        "tests": [
+          { "fact": "source.extension", "operator": "inset",
+            "operand": ["heic", "dng", "cr2", "cr3", "nef", "arw"] }
+        ]
+      },
+      "then": { "targetFormat": "jpg", "quality": 92 }
+    },
+    {
+      "id": "merge-paperwork",
+      "description": "A dozen documents is a stack, not a pile",
+      "priority": 40,
+      "when": {
+        "tests": [
+          { "fact": "source.extension", "operator": "inset",
+            "operand": ["docx", "doc", "odt", "rtf", "xlsx", "pptx", "pdf"] },
+          { "fact": "request.batch_count", "operator": "gte", "operand": 12 }
+        ]
+      },
+      "then": { "presetId": "merge-pdf", "namePattern": "{folder}-merged" }
+    }
+  ]
+}
 ```
 
-- **Windows 10/11**: run `Lantern-<version>-win-Setup.exe`, or unzip the `win-Portable.zip` and run `Lantern.exe`.
-  - Setup is Lantern's own installer, in Lantern's languages, and needs nothing else on the PC.
-  - It can add the Explorer menu, start at sign-in, the `lantern` command and optional engines.
-  - Silent installs take Inno Setup's switches (`/VERYSILENT /SUPPRESSMSGBOXES`).
-- **macOS 13+** (preview): unpack the `osx-arm64` or `osx-x64` package and run `./install.sh`.
-  - Or open the `.dmg` and drag Lantern to Applications (the `lantern` command comes with `install.sh`).
-  - The build isn't notarized yet, so allow the first start in System Settings → Privacy & Security → **Open Anyway**.
-- **Linux x64/ARM64** (Ubuntu 22.04+): unpack the package and run `./install.sh` (no root, needs Python 3).
-  - Drag gestures need X11.
-    On Wayland, use the drop zone and the file manager's right-click menu.
+### How conflicts are settled
 
-Lantern shows new releases in its menu and updates itself, keeping your settings and engines.
-After an update, a few slides show what's new.
+Three rules, applied in order:
 
-**Windows: Lantern doesn't start (no window, no error)?**
-This happens on Windows 10 that hasn't been updated for a long time, on a PC whose processor supports Hardware-enforced Stack Protection (CET).
-Windows turns that protection on but lacks a part that .NET needs, so Lantern and Setup stop right away.
+1. **Priority** — a higher number overwrites a lower one.
+2. **Specificity** — at equal priority, the rule carrying more tests wins. This is why a general
+   rule can sit at the top of the file and the exceptions below it, instead of every rule needing
+   a hand-maintained unique priority integer.
+3. **Declaration order** — later in the file wins what is still tied.
 
-- **Recommended:** install the available Windows updates (the latest cumulative update).
-- **If updating isn't possible:** turning the protection off for Lantern alone usually works.
-  Run this in PowerShell as administrator:
+Rules **layer** rather than replace. A rule contributes only the fields it names; everything else
+survives from lower-ranked rules. `allowedEngines` intersects instead of overwriting, so two rules
+that each permit a set of engines end up permitting only what both allow — adding a restrictive
+rule can never widen what a stricter one forbade.
 
-```powershell
-Set-ProcessMitigation -Name Lantern.exe -Disable UserShadowStack
-Set-ProcessMitigation -Name lantern-cli.exe -Disable UserShadowStack
-```
+A rule can set `"sealed": true` to become immune to anything lower, regardless of priority.
 
-Do the same with Setup's file name (e.g. `Lantern-<version>-win-Setup.exe`), or use the portable ZIP, which needs only these two lines.
-To undo it, remove the entries in Windows Security → App & browser control → Exploit protection settings → Program settings.
+### Facts you can test
 
-## Features
+| Fact | Type | Meaning |
+| --- | --- | --- |
+| `source.name` | text | File name with extension |
+| `source.extension` | text | Lowercased extension, derived automatically |
+| `source.size_bytes` | number | Exact size |
+| `source.size_mb` | number | Size in MB, derived automatically |
+| `source.category` | text | Format family: `image`, `pdf`, `document`, `video`, … |
+| `source.format` | text | Format id |
+| `request.preset` | text | Preset the caller invoked |
+| `request.target` | text | Requested target format |
+| `request.batch_count` | number | How many files are in this drop |
+| `destination.folder` | text | Where the output would go |
+| `destination.free_mb` | number | Free space at the destination |
+| `destination.would_overwrite_source` | boolean | Set by the caller before evaluation |
+| `user.language` | text | UI language code |
+| `user.tag` | text | Free-form tag the caller supplies |
 
-- **A donut at the cursor**: hold a key, drag files and drop them on a format.
-  Only formats that fit the files appear.
-- **Straight from the browser**: drag a picture, a link to a file or a download out of Chrome, Edge, Firefox or Safari the same way.
-  - Lantern saves it to your Downloads folder (or keeps only the converted file) and converts it.
-  - Links are downloaded without your browser's sign-in.
-- **One toolbar per file type**, arranged by drag and drop, with presets for:
-  - quality, size, DPI
-  - PDF pages and compression
-  - video and audio
-  - output folder and file names
-- **Two sides to every donut**: press <kbd>Tab</kbd> or turn the mouse wheel while it is open to flip it over to less common formats and tools.
-- **Crop before converting**: the Crop slice opens pictures one by one.
-  Drag the frame, pick a ratio, and only that part is saved.
-- **Many files at once**, in parallel.
-  Routes with several steps (HWP → HWPX → DOCX) are found automatically.
-- **Watch folders** convert every file that lands in them.
-- **Recent conversions** on Home, each with a thumbnail: open the result, or open it with another app.
-- **A file list on Home**: turn on *Collect dropped files in a list* in General settings, and files dropped on Home (including those dragged from a browser) wait in a list instead of opening the donut.
-  Drag the cards or use Alt+↑ / Alt+↓ to set the order, Delete to remove one, and *Choose action* to open the donut for the list in that order.
-  The list empties when that conversion completes.
-- **Other ways in**: the right-click menu, a keyboard shortcut, the drop zone and the [`lantern` command](#command-line).
-- Light and dark themes with your own accent colour and donut opacity, in English, Español, 日本語, 한국어, 简体中文, 繁體中文, Polski, हिन्दी, Русский, العربية (right to left), Português (Brasil), Français, नेपाली, ไทย, Türkçe, Português (Portugal), Deutsch, Italiano, Bahasa Indonesia and Tiếng Việt.
+### Operators
 
-## Screenshots
+`equals` · `notequals` · `gt` · `gte` · `lt` · `lte` · `contains` · `startswith` · `endswith` ·
+`inset` · `matches` (regex, 100 ms timeout) · `exists` · `notexists`
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/media/page-toolbar-en.png" alt="Donut toolbar editor with profiles and presets"></td>
-    <td width="50%"><img src="docs/media/page-home-en.png" alt="Home screen with the drop zone and recent conversions"></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Arrange the donut by drag and drop, one profile per file type</sub></td>
-    <td align="center"><sub>Home: drop zone and recent conversions</sub></td>
-  </tr>
-</table>
+Conditions nest, and combine with `all`, `any`, `none`, or `atleast` (with a `minimum`).
 
-## Formats
+A comparison between incompatible types **fails and says so in the trace** rather than coercing.
+That strictness is deliberate: rule engines that coerce are why people stop trusting rule engines.
 
-| From | To |
-|---|---|
-| **Images**: JPG, PNG, WEBP, AVIF, TIFF, BMP, GIF, APNG, ICO, ICNS, JPEG XL, JPEG 2000, PSD/PSB, TGA, PPM, HEIC, QOI, DDS, PCX, MNG, CUR, …;<br>GIMP XCF, camera RAW (CR2, CR3, NEF, ARW, DNG, …), DICOM, OpenEXR, HDR, FITS, JPEG XR (Windows), iPhone Live Photo (LIVP) read | any of these (HEIC⁵), PDF, SVG (traced), resized, grayscale;<br>Live/Motion Photos (iPhone, Android) → their video (MP4, MOV⁵), and a video → Live Photo (iPhone) or Motion Photo (Android)⁵, experimental |
-| **Vector**: SVG, SVGZ, EMF, WMF, AI<br>EPS, PS¹<br>CDR, VSD, CGM, ODG, FODG² | PDF (vector), PNG and other images,<br>SVG ↔ SVGZ, SVG → DXF/DWG, PDF → EPS/PS¹, SVG → EMF, WMF, ODG² |
-| **PDF** | DOCX, HWPX, TXT, PNG, JPG, TIFF, CBZ, PPTX (a picture of each page), SVG²;<br>merge (in an order you choose first), split, page ranges, compress (smaller PDFs) |
-| **Documents**: DOCX, DOCM, DOTX, EML, Outlook MSG;<br>OFD (Chinese e-invoices, official documents) read<br>DOC, ODT, FODT, OTT, RTF, WPS, WPD, Pages, ClarisWorks, MacWrite, T602, …² | PDF, DOCX, HWPX, EPUB, TXT, HTML;<br>MSG → EML<br>ODT, FODT, OTT² |
-| **Spreadsheets**: XLSX, XLSM, XLS, XLT, ODS, CSV, TSV<br>OTS, FODS, Numbers, ET² | PDF, XLSX, ODS, CSV, TSV, JSON, HWPX, HTML<br>XLT, OTS² |
-| **Presentations**: PPTX, PPTM, POTX, POTM, PPSX<br>PPT, ODP, OTP, FODP, Keynote² | PDF, PNG, JPG, DOCX, HWPX<br>OTP² |
-| **HWP**: HWP, HWPX | PDF, PNG, DOCX, HWPX ↔ HWP, TXT, Markdown, HTML |
-| **Text**: TXT, LOG, script source (PY, PAC, BAT, COMMAND; read, never run), Markdown, HTML;<br>MHTML (saved web pages) read<br>reStructuredText, LaTeX, Org, AsciiDoc, Typst, MediaWiki, DocBook, Jupyter, Textile, man, OPML³ | UTF-8 TXT, PDF, DOCX, HWPX, EPUB<br>each other, PPTX slides³ |
-| **E-books**: EPUB, KEPUB, MOBI, AZW3, AZW, AZW4, FB2, CBZ, CBR, CB7, HTMLZ, TXTZ<br>LIT, LRF, CHM, PDB, …⁴ | PDF, EPUB, KEPUB (Kobo), DOCX, TXT, HTML, HWPX<br>MOBI, AZW3⁴ |
-| **Video**⁵: MP4, MOV, MKV, WEBM, AVI, WMV, FLV, MPEG, Video CD (DAT), TS, M2TS, 3GP, OGV, VOB, … | MP4 (H.264, HEVC, AV1), WEBM, MOV, MKV, AVI, GIF, APNG, MP3, M4A, 720p,<br>subtitles (SRT, ASS, WebVTT) |
-| **Audio**⁵: MP3, M4A, AAC, WAV, FLAC, OGG, OPUS, WMA, AIFF, AMR, APE, WavPack, TTA, DSD (DSF, DFF), DTS, AC3, E-AC3, … | MP3, M4A (AAC, ALAC), WAV, FLAC, OGG, OPUS, AAC, WavPack, TTA, W64, AC3, E-AC3 |
-| **Subtitles**: SRT, ASS/SSA, WebVTT, SAMI (SMI), LRC, TTML, MicroDVD, SCC | each other as UTF-8 (Korean CP949 files read correctly) |
-| **Archives**: ZIP, ANSYS Workbench (WBPZ), 7Z, RAR, TAR, TAR.GZ, TAR.BZ2, TAR.XZ, GZ, ISO, CAB, DMG, ALZ, EGG, … | extract, ZIP, 7Z, TAR, TAR.GZ;<br>any files → one ZIP |
-| **CAD**: DWG, DXF | PDF, SVG, PNG, DWG ↔ DXF |
-| **Fonts**: TTF, OTF, WOFF, WOFF2, EOT;<br>FON (Windows bitmap fonts) read | each other;<br>FON → one font per size |
-| **Data**: JSON, JSON Lines, YAML, TOML, XML<br>vCard, iCalendar | each other, CSV and XLSX (tables);<br>vCard, iCalendar ↔ CSV |
-| **3D models**: GLB, glTF, STL, OBJ (+ MTL), 3MF, PLY;<br>FBX read | each other, PNG preview |
-| **Geospatial vectors**: Shapefile, GeoJSON, KML, KMZ, GPX<br>CSV with coordinates; Garmin FIT, OpenStreetMap (.osm) read | each other and CSV / XLSX / JSON;<br>projected data (UTM, Web Mercator, Lambert, Albers) comes out as WGS 84 longitude / latitude |
+### When the file is wrong
 
-Unmarked formats work out of the box, without Office, Hancom Office or LibreOffice.
-Marked ones need an optional engine, downloaded only when needed: ¹ Ghostscript, ² LibreOffice, ³ Pandoc, ⁴ calibre, ⁵ FFmpeg ([details](docs/ENGINES.md)).
+The reader is lenient on purpose, because this file gets hand-edited:
 
-## Command line
+- An unknown operator drops that one test, not the rule.
+- A rule with no `id` is skipped with a warning, not fatal.
+- Corrupt JSON falls back to the starter policy instead of taking the whole app down.
 
-The `lantern` command uses the same engines and presets as the app (Setup or `install.sh` adds it).
+None of that can silently disable the system. That is the point.
 
-```
-lantern convert photo.heic --to jpg
-lantern convert *.png --to webp --quality 80 -o converted
-lantern watch D:\Inbox --to pdf --move-originals
-```
+## What you get from upstream, unchanged
 
-Every command and option: [lantern.sh/cli](https://lantern.sh/cli/) or `lantern help`.
+All of the actual conversion work: 280 recognised formats across images, PDF, Office documents,
+HWP/HWPX, e-books, video, audio, subtitles, archives, vector graphics, CAD, fonts, 3D models and
+geospatial data. 169 built-in presets. 22 interface languages. A radial menu that opens at your
+cursor. Watch folders. A command line.
 
-## Development
+Switchable format fields mean a user who never touches CAD or 3D models does not see those slices,
+while the formats still convert if a file of that kind arrives — "off" hides, it does not disable.
 
-Build with the .NET 10 SDK on Windows, macOS or Linux:
+The full capability list is upstream's to document accurately, so it is not restated here at
+length. See [Filee's README](https://github.com/KnifeLemon/Filee) for the format matrix and the
+engine download behaviour.
+
+## Build
+
+.NET 10 SDK required.
 
 ```bash
 git clone https://github.com/Tong-bit-art/Lantern.git
 cd Lantern
-pwsh build/fetch-engines.ps1 -Only rhwp,pandoc   # optional engines
+dotnet build Lantern.slnx -c Release
 dotnet run --project src/Lantern.App
-dotnet test
 ```
 
-[Architecture](docs/ARCHITECTURE.md) · [Engines](docs/ENGINES.md) · [Adding a converter](docs/ADDING-A-CONVERTER.md) · [Adding a language](docs/ADDING-A-LANGUAGE.md) · [Contributing](CONTRIBUTING.md)
+Tests, and what to expect from them:
 
-Pull requests are welcome.
-If Lantern saves you some clicks, a ⭐ helps other people find it.
+```bash
+dotnet test Lantern.slnx
+```
 
-## Code signing policy
+`WebDownloaderTests` contains two cases that resolve real DNS names and make real HTTP requests.
+Both fail in a restricted network, and both fail identically on the unmodified upstream checkout —
+they are environment-dependent, not a regression. Everything else passes. The recorded run is in
+[`EVIDENCE/build-log.txt`](EVIDENCE/build-log.txt).
 
-Lantern is developed and published by **Myeonggu Kim** ([KnifeLemon](https://github.com/Tong-bit-art)).
+Optional engines (FFmpeg, LibreOffice, calibre, Ghostscript, Pandoc, ExifTool, Tesseract) download
+on first use. Bundled binaries:
 
-- Windows releases are signed with a [Certum](https://www.certum.eu/) open source code signing certificate issued to Myeonggu Kim ("Open Source Developer MYEONGGU KIM").
-  - Releases before it, up to 2.0.0, are not signed.
-  - SmartScreen can still warn about a new release until it has been downloaded enough ("More info" → "Run anyway").
-- macOS packages are ad-hoc signed and not notarized.
-- Only files built by this repository's GitHub Actions release workflow are signed, and every release is signed and approved by hand.
-  - Libraries and programs their makers signed (.NET, SkiaSharp, ImageMagick, the Microsoft C++ runtime …) keep their own signatures; bundled ones that come unsigned (rhwp, 7-Zip and most libraries) are signed with Lantern's certificate, as part of Lantern.
+```bash
+pwsh build/fetch-engines.ps1
+```
 
-### Privacy policy
+## How this repo relates to Filee
 
-Lantern converts files on your own computer and never uploads them.
-It collects no usage data and sends no telemetry.
-It connects to the internet only:
+Lantern is MIT-licensed and derived from Filee, also MIT. The `LICENSE` file carries **both**
+copyright lines, which is what the licence requires and what honesty requires.
 
-- to ask GitHub (`api.github.com`) whether a newer release exists, shortly after start and then every few hours.
-  Turn this off in Settings → About ("Check for updates automatically").
-- to download the conversion engines you choose to install, from the official locations pinned in [`engines.json`](src/Lantern.Engines/Infrastructure/engines.json), and the text recognition (OCR) languages a preset uses, pinned in [`ocr-languages.json`](src/Lantern.Engines/Infrastructure/ocr-languages.json).
-- when you click a link, which opens your web browser.
+| File | What it establishes |
+| --- | --- |
+| [`UPSTREAM-BASELINE.txt`](UPSTREAM-BASELINE.txt) | The exact upstream commit, so the diff is reproducible |
+| [`FORK-CHANGES.md`](FORK-CHANGES.md) | Every change, split into mechanical renames, identity replacements, and original work |
+| [`EVIDENCE/ARCHITECTURE-REPORT.md`](EVIDENCE/ARCHITECTURE-REPORT.md) | How the system is built: routing graph, format model, identity surfaces |
+| [`EVIDENCE/ORIGINALITY.md`](EVIDENCE/ORIGINALITY.md) | Precisely what is original here, with the commands to verify it |
+| [`NOTICE`](NOTICE) | Derivation statement and trademark position |
 
-## Sponsor
+Being blunt about it: **most of this repository is not my code.** The policy engine, its 27 tests
+and the documentation are. Section 3 of `FORK-CHANGES.md` draws that line and the verification
+commands in `ORIGINALITY.md` let you check whether it holds.
 
-Lantern is free and stays free.
-If you'd like to support it, pick whichever way suits you ([Fairy](https://fairy.hada.io/@lantern) takes Korean cards and easy-pay).
+### Installer identity was changed on purpose
 
-**Your name or logo here.**
-Monthly backers are listed here by name, and sponsors get their logo here and on Lantern's About page.
-One-time supporters can ask to be listed too.
+This fork cannot coexist with a Filee installation if it keeps upstream's identity. Specifically:
 
-<!-- sponsors: src/Lantern.App/Assets/Sponsors/sponsors.json -->
+- New installer GUID (`{891211E8-…}` instead of `{C8686E06-…}`). The old one would have registered
+  this as an upgrade of Filee, overwriting it and deleting its files on uninstall.
+- Separate registry keys, data directories, cache folders and single-instance mutex.
+- Upstream's update signing key and expected Authenticode publisher/issuer are **emptied, not
+  replaced**. Those values gate update acceptance; left populated, the app would report an update
+  as available and then refuse it forever, because the matching private key belongs to the
+  upstream maintainer.
 
-<p align="center">
-  <a href="https://github.com/sponsors/Tong-bit-art"><img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"></a>
-  <a href="https://patreon.com/Tong-bit-art"><img src="https://img.shields.io/badge/Patreon-000000?style=for-the-badge&logo=patreon&logoColor=white" alt="Patreon"></a>
-  <a href="https://ko-fi.com/knifelemon"><img src="https://img.shields.io/badge/Ko--fi-FF6433?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi"></a>
-  <a href="https://paypal.me/knifelemon"><img src="https://img.shields.io/badge/PayPal-002991?style=for-the-badge&logo=paypal&logoColor=white" alt="PayPal"></a>
-  <a href="https://fairy.hada.io/@lantern"><img src="https://img.shields.io/badge/Fairy-2E9E6B?style=for-the-badge" alt="Fairy"></a>
-</p>
+### What is not provisioned
 
-## License
+- No code-signing certificate. Windows installers built from this tree will trigger SmartScreen.
+- No update signing key. The updater falls back to same-release checksum verification.
+- No published release and no CI run.
 
-MIT, © 2026 Myeonggu Kim (KnifeLemon) and Lantern contributors.
-Bundled third-party components keep their own licenses, listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+Populating either requires generating a key pair with `build/new-update-key.ps1` and buying an
+Authenticode certificate.
 
-<p align="center">
-  <a href="https://star-history.com/#Tong-bit-art/Lantern&Date"><img src="https://api.star-history.com/svg?repos=Tong-bit-art/Lantern&type=Date" alt="Star history" width="600"></a>
-</p>
+## Licence
+
+MIT. Third-party components keep their own terms — see
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+
+"Filee" is the upstream project's name. This fork does not use its name, logo, website, installer
+identity, update key or signing certificate.
+
+## Links
+
+- Upstream project: [KnifeLemon/Filee](https://github.com/KnifeLemon/Filee)
+- This fork: [Tong-bit-art/Lantern](https://github.com/Tong-bit-art/Lantern)

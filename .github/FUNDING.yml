@@ -1,4 +1,13 @@
-github: KnifeLemon
-patreon: KnifeLemon
-ko_fi: knifelemon
-custom: ["https://fairy.hada.io/@lantern", "https://paypal.me/knifelemon"]
+# Sponsorship is not configured for this fork.
+#
+# The upstream project (Filee) has its own funding accounts. Pointing this fork's Sponsor
+# button at them would send money to the upstream maintainer for work done here, so the
+# entries were removed rather than carried over.
+#
+# To enable sponsorship, add your own account names below and uncomment. Valid keys are
+# documented at https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+#
+# github: [your-account]
+# patreon: your-account
+# ko_fi: your-account
+# custom: ["https://your-link"]

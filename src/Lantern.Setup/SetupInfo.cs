@@ -11,7 +11,7 @@ public static class SetupInfo
             .FirstOrDefault(a => a.Key == "RepositoryUrl")?.Value ?? "https://github.com/Tong-bit-art/Lantern";
 
     /// <summary>The website: one big download button.</summary>
-    public const string WebsiteUrl = "https://lantern.sh/";
+    public const string WebsiteUrl = "https://github.com/Tong-bit-art/Lantern";
 
     /// <summary>The version this Setup program was built as (the payload says which Lantern it installs).</summary>
     public static string Version =>
