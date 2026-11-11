@@ -1,0 +1,111 @@
+// Describes what the user has to press to open the donut toolbar. Deliberately flexible:
+// any modifier combination, any mouse button, optional extra key, drag / hold / key-only.
+
+namespace Lantern.Core.Settings;
+
+/// <summary>Modifier keys. Left/right variants are treated the same.</summary>
+[Flags]
+public enum ModifierKeys
+{
+    None = 0,
+    Ctrl = 1,
+    Alt = 2,
+    Shift = 4,
+    /// <summary>Windows key on Windows, Command on macOS.</summary>
+    Meta = 8,
+}
+
+/// <summary>Mouse buttons a gesture can use.</summary>
+public enum TriggerMouseButton
+{
+    None,
+    Left,
+    Right,
+    Middle,
+    X1,
+    X2,
+}
+
+/// <summary>What physical action completes the gesture.</summary>
+public enum TriggerKind
+{
+    /// <summary>Hold the modifiers and drag with the mouse button past the threshold. Used for file drags.</summary>
+    Drag,
+    /// <summary>Hold the modifiers and keep the mouse button pressed without moving for <see cref="TriggerGesture.HoldMilliseconds"/>.</summary>
+    Hold,
+    /// <summary>Press the modifiers + <see cref="TriggerGesture.Key"/> (no mouse). Uses the file manager selection.</summary>
+    KeyChord,
+}
+
+/// <summary>Where the gesture is active.</summary>
+public enum TriggerScope
+{
+    /// <summary>
+    /// Only when the cursor is over a file manager (Explorer, Finder; on Windows also Files, Directory Opus and other
+    /// file managers) or the desktop.
+    /// </summary>
+    FileManager,
+    /// <summary>Everywhere, except excluded applications.</summary>
+    Anywhere,
+}
+
+/// <summary>The face of the donut a gesture opens on.</summary>
+public enum DonutFace
+{
+    Front,
+    /// <summary>The back face (the second set of slices); the front when the back has no slice for the files.</summary>
+    Back,
+}
+
+/// <summary>A user-configurable gesture that opens the donut toolbar.</summary>
+public sealed class TriggerGesture
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    public bool Enabled { get; set; } = true;
+    public TriggerKind Kind { get; set; } = TriggerKind.Drag;
+    public ModifierKeys Modifiers { get; set; } = ModifierKeys.Ctrl;
+    public TriggerMouseButton Button { get; set; } = TriggerMouseButton.Left;
+
+    /// <summary>
+    /// Extra non-modifier key (SharpHook <c>KeyCode</c> name without the "Vc" prefix, e.g. <c>"Space"</c>).
+    /// Required for <see cref="TriggerKind.KeyChord"/>, optional otherwise.
+    /// </summary>
+    public string? Key { get; set; }
+
+    /// <summary>Distance in logical pixels the mouse must travel before a drag counts. 0 = system default.</summary>
+    public int DragThreshold { get; set; }
+
+    /// <summary>Press duration for <see cref="TriggerKind.Hold"/>.</summary>
+    public int HoldMilliseconds { get; set; } = 450;
+
+    public TriggerScope Scope { get; set; } = TriggerScope.FileManager;
+
+    /// <summary>
+    /// <see cref="TriggerKind.KeyChord"/> only, where the platform has a clipboard (<c>SupportsClipboard</c>): the
+    /// donut opens for the files on the clipboard, else the picture on it (a screenshot), and the results are put back
+    /// on the clipboard. With neither on it, the shortcut does nothing. Off unless the user turns it on for a shortcut
+    /// of their own choosing: the hook can't hold the keys back, so a preset combination (Shift + Cmd + V is Paste and
+    /// Match Style in most text fields) would also reach the app in front.
+    /// </summary>
+    public bool Clipboard { get; set; }
+
+    /// <summary>
+    /// The face the donut opens on (#195): two gestures with different modifiers open different sets of slices, Ctrl +
+    /// drag the front and Ctrl + Shift + drag the back, say. The flip key and the wheel still turn it over from there.
+    /// </summary>
+    public DonutFace Face { get; set; } = DonutFace.Front;
+
+    public TriggerGesture Clone() => (TriggerGesture)MemberwiseClone();
+
+    /// <summary>Default gestures for the current OS.</summary>
+    public static List<TriggerGesture> Defaults()
+    {
+        // On macOS Ctrl+click means right-click, and Option already means "copy" in Finder.
+        var dragModifier = OperatingSystem.IsMacOS() ? ModifierKeys.Alt : ModifierKeys.Ctrl;
+        return
+        [
+            new() { Kind = TriggerKind.Drag, Modifiers = dragModifier, Button = TriggerMouseButton.Left },
+            new() { Kind = TriggerKind.KeyChord, Modifiers = ModifierKeys.Ctrl | ModifierKeys.Alt, Button = TriggerMouseButton.None, Key = "Space" },
+        ];
+    }
+}

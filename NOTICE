@@ -1,0 +1,37 @@
+Lantern
+=======
+
+Lantern is a derivative work of Filee.
+
+Upstream project : Filee
+Upstream URL     : https://github.com/KnifeLemon/Filee
+Upstream license : MIT License
+Upstream holder  : Copyright (c) 2026 Myeonggu Kim (KnifeLemon) and Filee contributors
+Upstream commit  : see UPSTREAM-BASELINE.txt in this repository
+
+This fork is maintained by Tong-bit-art and is distributed under the MIT
+License. The full license text is in LICENSE, where both the upstream
+copyright line and this fork's copyright line are retained as the MIT License
+requires.
+
+What this fork changes
+----------------------
+See FORK-CHANGES.md for the itemized list of modifications, and
+EVIDENCE/ for the architecture reconstruction report, the originality
+analysis of the modules written for this fork, and the build provenance log.
+
+Trademark and naming
+--------------------
+"Filee" is the name the upstream project is distributed under. This fork does
+not use that name, its logo, its website, its installer identity, its update
+signing key, or its code signing certificate. The Windows installer GUID,
+registry keys, data directories, update endpoint and single-instance mutex name
+have all been replaced, so an installation of this fork and an installation of
+upstream Filee can coexist on one machine without overwriting or uninstalling
+one another.
+
+Third-party components
+----------------------
+This project bundles and links third-party libraries and programs. Their
+licenses are listed in THIRD-PARTY-NOTICES.md, which the upstream project
+maintains and this fork inherits unchanged.

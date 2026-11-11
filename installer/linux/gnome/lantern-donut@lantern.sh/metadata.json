@@ -1,0 +1,15 @@
+{
+  "uuid": "lantern-donut@lantern.sh",
+  "name": "Lantern donut at the cursor",
+  "description": "Enables Lantern drag gestures on GNOME Wayland without input-device permissions, and places its conversion menu at the pointer.",
+  "version": 3,
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51"
+  ]
+}

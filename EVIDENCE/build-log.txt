@@ -1,0 +1,19 @@
+BUILD AND TEST VERIFICATION LOG
+Generated: 2026-11-11T13:47:07Z
+SDK: 10.0.404
+OS: MINGW64_NT-10.0-26200 3.6.6-1cdd4371.x86_64
+
+=== dotnet build Lantern.slnx -c Release ===
+    0 个警告
+    0 个错误
+
+已用时间 00:00:07.43
+
+=== policy module tests ===
+已通过! - 失败:     0，通过:    27，已跳过:     0，总计:    27，持续时间: 156 ms - Lantern.Core.Tests.dll (net10.0)
+
+=== whole Core test project ===
+失败!  - 失败:     2，通过:  1238，已跳过:     8，总计:  1248，持续时间: 11 s - Lantern.Core.Tests.dll (net10.0)
+
+=== upstream baseline, same 2 failing tests, unmodified tree ===
+(run separately in recon/filee-upstream: 2 failed, 16 passed — identical failures)

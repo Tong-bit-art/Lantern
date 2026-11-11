@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Lantern.Platform.MacOS</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lantern.Core\Lantern.Core.csproj" />
+    <InternalsVisibleTo Include="Lantern.Platform.Tests" />
+  </ItemGroup>
+</Project>

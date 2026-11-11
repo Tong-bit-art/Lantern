@@ -1,0 +1,60 @@
+# Security policy
+
+## Supported versions
+
+Only the [latest release](https://github.com/Tong-bit-art/Lantern/releases/latest) gets security fixes. Lantern checks for
+updates, and an installed copy updates in place, so please check that the problem is still there in the latest
+release before you report it.
+
+## Reporting a vulnerability
+
+Please don't open a public issue for a security problem.
+
+Report it privately with **[Report a vulnerability](https://github.com/Tong-bit-art/Lantern/security/advisories/new)** on
+the repository's Security tab.
+
+Include the Lantern version, your operating system, what an attacker can do and the steps or file that show it. If a
+crafted file triggers it, attach the file, or say how to make one.
+
+You'll get a reply as soon as possible. Once the fix is released, the advisory is published and you're credited
+unless you'd rather not be. A release that fixes a security problem is marked *required*, so every copy shows it
+each time it starts until it is updated.
+
+## Scope
+
+In scope:
+
+- Lantern itself: the app, the CLI, Setup, the context menu and Explorer menu, watch folders.
+- Files that make Lantern do more than convert them, such as writing outside the output folder, running code, or
+  reading files they shouldn't.
+- How Lantern downloads and checks updates and engines.
+
+Out of scope:
+
+- Bugs in the engines (FFmpeg, LibreOffice, Ghostscript, Pandoc, rhwp, 7-Zip and others). Report those to their
+  projects. Tell us too if Lantern should update the pinned version.
+- SmartScreen or Gatekeeper warnings: releases up to 2.0.0 aren't code-signed, SmartScreen can still warn about a new
+  signed release for a while, and macOS builds are ad-hoc signed and not notarized (see
+  [Code signing policy](README.md#code-signing-policy)).
+- Attacks that need someone who can already run programs as you on your computer.
+
+## How downloads are checked
+
+- **Updates:** an installed copy downloads the new installer (Windows) or package (Linux) from GitHub Releases and
+  checks its SHA-256 against the release's `SHA256SUMS` file before it runs it.
+  - Official builds carry the public half of Lantern's update key. The `SHA256SUMS` file must then have a valid
+    signature made with that key next to it (`…-SHA256SUMS.txt.sig`, ECDSA P-256), and the version it lists must be
+    newer than the installed one. Otherwise nothing is installed, on every platform. The private key never leaves
+    the maintainer's PC; releases are signed there, not on GitHub.
+  - On Windows, Windows must also trust the installer's Authenticode signature, and the certificate must be Lantern's:
+    an official build names the publisher and the certificate authority that issued its certificate, so it checks
+    both even if the installed copy itself isn't signed. A copy built from source compares with the certificate that
+    signed it. An installer signed by anyone else is discarded.
+- **Engines:** every engine comes from the official location pinned in
+  [`engines.json`](src/Lantern.Engines/Infrastructure/engines.json), with its SHA-256 and size. A download that doesn't
+  match is discarded.
+- **Release files:** each release lists the SHA-256 of every package in `Lantern-<version>-SHA256SUMS.txt` (the Linux
+  and macOS packages in their own `-SHA256SUMS.txt` files), each signed with the update key in a `.sig` file.
+
+Lantern converts files on your own computer and never uploads them. See the
+[Privacy policy](README.md#privacy-policy).

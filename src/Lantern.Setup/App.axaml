@@ -1,0 +1,19 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Lantern.Setup.App"
+             Name="Lantern Setup"
+             RequestedThemeVariant="Default">
+  <!-- Light or dark follows Windows (RequestedThemeVariant="Default"), like Lantern's "System" theme. -->
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Lantern.Setup/Views/StateViews.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://Lantern.Setup/Styles/Soft.axaml" />
+    <StyleInclude Source="avares://Lantern.Setup/Styles/Setup.axaml" />
+  </Application.Styles>
+</Application>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Lantern.Platform.Linux\Lantern.Platform.Linux.csproj" />
+    <ProjectReference Include="..\..\src\Lantern.Platform.MacOS\Lantern.Platform.MacOS.csproj" />
+    <ProjectReference Include="..\..\src\Lantern.Platform.Windows\Lantern.Platform.Windows.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lantern.Core/Lantern.Core.csproj" />
+    <Project Path="src/Lantern.Engines/Lantern.Engines.csproj" />
+    <Project Path="src/Lantern.Platform.Windows/Lantern.Platform.Windows.csproj" />
+    <Project Path="src/Lantern.Platform.Linux/Lantern.Platform.Linux.csproj" />
+    <Project Path="src/Lantern.Platform.MacOS/Lantern.Platform.MacOS.csproj" />
+    <Project Path="src/Lantern.App/Lantern.App.csproj" />
+    <Project Path="src/Lantern.Cli/Lantern.Cli.csproj" />
+    <Project Path="src/Lantern.Setup/Lantern.Setup.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lantern.Core.Tests/Lantern.Core.Tests.csproj" />
+    <Project Path="tests/Lantern.Engines.Tests/Lantern.Engines.Tests.csproj" />
+    <Project Path="tests/Lantern.App.Tests/Lantern.App.Tests.csproj" />
+    <Project Path="tests/Lantern.Cli.Tests/Lantern.Cli.Tests.csproj" />
+    <Project Path="tests/Lantern.Platform.Tests/Lantern.Platform.Tests.csproj" />
+    <Project Path="tests/Lantern.Setup.Tests/Lantern.Setup.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path=".editorconfig" />
+  </Folder>
+</Solution>

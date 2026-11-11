@@ -1,0 +1,106 @@
+<!--
+  Lantern.App: the Avalonia desktop application (tray, donut toolbar, settings window).
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Lantern</AssemblyName>
+    <RootNamespace>Lantern.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Icons\lantern.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lantern.Core\Lantern.Core.csproj" />
+    <ProjectReference Include="..\Lantern.Engines\Lantern.Engines.csproj" />
+    <ProjectReference Include="..\Lantern.Platform.Windows\Lantern.Platform.Windows.csproj" />
+    <ProjectReference Include="..\Lantern.Platform.Linux\Lantern.Platform.Linux.csproj" />
+    <ProjectReference Include="..\Lantern.Platform.MacOS\Lantern.Platform.MacOS.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="SharpHook" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <LanternNativeWayland Condition="$(RuntimeIdentifier.StartsWith('linux')) Or ('$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Linux')))">true</LanternNativeWayland>
+    <DefineConstants Condition="'$(LanternNativeWayland)' == 'true'">$(DefineConstants);LANTERN_NATIVE_WAYLAND</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Linux-only Wayland packages to keep Windows and macOS binaries small -->
+  <ItemGroup Condition="'$(LanternNativeWayland)' == 'true'">
+    <PackageReference Include="Avalonia.Wayland" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+    <!-- Shown on the About page. -->
+    <AvaloniaResource Include="..\..\THIRD-PARTY-NOTICES.md" Link="Assets\THIRD-PARTY-NOTICES.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lantern.App.Tests" />
+  </ItemGroup>
+
+  <!-- Native debug symbols from NuGet packages (SkiaSharp, HarfBuzz: ~100 MB) are useless to users. -->
+  <Target Name="LanternRemoveNativeSymbols" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <_LanternNativePdb Include="$(PublishDir)lib*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_LanternNativePdb)" />
+  </Target>
+
+  <!-- Repository URL for the updater / About page, taken from Directory.Build.props. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RepositoryUrl</_Parameter1>
+      <_Parameter2>$(LanternRepositoryUrl)</_Parameter2>
+    </AssemblyAttribute>
+    <!-- Published builds (installer, portable zip) set -p:LanternRelease=true: only they register Explorer and startup
+         entries (UpdateService.IsReleaseBuild), so running from source leaves the user's system alone. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(LanternRelease)' == 'true'">
+      <_Parameter1>LanternRelease</_Parameter1>
+      <_Parameter2>true</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <!-- How official builds check updates (Directory.Build.props): the update key and the expected publisher. Running
+       from source and the tests keep to today's checks. -->
+  <ItemGroup Condition="'$(LanternRelease)' == 'true'">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(LanternUpdatePublicKey)' != ''">
+      <_Parameter1>LanternUpdatePublicKey</_Parameter1>
+      <_Parameter2>$(LanternUpdatePublicKey)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(LanternExpectedPublisher)' != ''">
+      <_Parameter1>LanternExpectedPublisher</_Parameter1>
+      <_Parameter2>$(LanternExpectedPublisher)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(LanternExpectedIssuer)' != ''">
+      <_Parameter1>LanternExpectedIssuer</_Parameter1>
+      <_Parameter2>$(LanternExpectedIssuer)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(LanternExpectedSignerKeys)' != ''">
+      <_Parameter1>LanternExpectedSignerKeys</_Parameter1>
+      <_Parameter2>$(LanternExpectedSignerKeys)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <!-- A subject alone is only text: an expected publisher needs the certificate authority that issued it. -->
+  <Target Name="LanternCheckExpectedPublisher" BeforeTargets="CoreCompile"
+          Condition="'$(LanternRelease)' == 'true' And '$(LanternExpectedPublisher)' != '' And '$(LanternExpectedIssuer)' == ''">
+    <Error Text="LanternExpectedPublisher is set without LanternExpectedIssuer (Directory.Build.props)." />
+  </Target>
+</Project>

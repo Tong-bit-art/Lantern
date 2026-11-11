@@ -1,0 +1,33 @@
+<!--
+  Lantern.Cli: the "lantern" command line. Converts files and watches folders without the tray app, with the same
+  engines, presets and settings. Published next to Lantern.exe as lantern-cli.exe (one runtime for both); the installer
+  puts a "lantern" shim on PATH (cli\lantern.cmd).
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>lantern-cli</AssemblyName>
+    <RootNamespace>Lantern.Cli</RootNamespace>
+    <ApplicationIcon>..\Lantern.App\Assets\Icons\lantern.ico</ApplicationIcon>
+    <!-- The Recycle Bin is IFileOperation, a COM interface (Lantern.Platform.Windows). -->
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lantern.Core\Lantern.Core.csproj" />
+    <ProjectReference Include="..\Lantern.Engines\Lantern.Engines.csproj" />
+    <!-- "Replace the original" moves originals to the Recycle Bin / Trash (MoveToTrash), as the app does. -->
+    <ProjectReference Include="..\Lantern.Platform.Windows\Lantern.Platform.Windows.csproj" />
+    <ProjectReference Include="..\Lantern.Platform.Linux\Lantern.Platform.Linux.csproj" />
+    <ProjectReference Include="..\Lantern.Platform.MacOS\Lantern.Platform.MacOS.csproj" />
+  </ItemGroup>
+
+  <!-- Error messages and built-in preset names, in English (the app's translation file). -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Lantern.App\Assets\i18n\en.json" LogicalName="Lantern.Cli.en.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lantern.Cli.Tests" />
+  </ItemGroup>
+</Project>

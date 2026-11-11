@@ -1,0 +1,245 @@
+using System.Diagnostics;
+using System.Runtime.Versioning;
+using System.Text;
+using System.Text.Json;
+using Lantern.Core.Platform;
+using Lantern.Core.Settings;
+
+namespace Lantern.Platform.MacOS;
+
+[SupportedOSPlatform("macos")]
+public sealed class MacOSPlatformServices : IPlatformServices
+{
+    private const string FinderSelectionScript = """
+        ObjC.import('Foundation');
+        const finder = Application('com.apple.finder');
+        JSON.stringify(finder.selection().map(item => ObjC.unwrap($.NSURL.URLWithString(item.url()).path)));
+        """;
+
+    public bool HasAccessibilityPermission => NativeMethods.AXIsProcessTrusted();
+
+    /// <summary>Asks for Accessibility with macOS's own alert (nothing happens when Lantern already has it).</summary>
+    public bool RequestAccessibilityPermission() => NativeMethods.RequestAccessibility();
+
+    public bool SupportsGlobalPointerGestures => HasAccessibilityPermission;
+
+    public bool SupportsSelectionShortcut => true;
+
+    /// <summary>Whether Lantern can change its visibility in the macOS Dock.</summary>
+    public bool SupportsDockVisibility => true;
+
+    /// <summary>Changes whether Lantern appears in the macOS Dock.</summary>
+    public bool TrySetShowInDock(bool show) => NativeMethods.SetShowInDock(show);
+
+    public string? LastSelectionError { get; private set; }
+
+    public TrashRefusal? MoveToTrash(string path) => NativeMethods.MoveToTrash(path);
+
+    public string? ShortcutTarget(string path) => NativeMethods.AliasTarget(path);
+
+    public bool IsFileManagerAt(int x, int y) =>
+        string.Equals(ProcessNameAt(x, y), "Finder", StringComparison.OrdinalIgnoreCase);
+
+    public string? ProcessNameAt(int x, int y) => NativeMethods.ProcessNameAt(x, y);
+
+    // SharpHook's libuiohook rebuilds its modifier mask on every event with CGEventSourceKeyState, which answers "up" for
+    // held keys while another app holds Secure Input (Terminal's Secure Keyboard Entry, a password field): every press
+    // then looks modifier-free and no ⌥ / ⌘ gesture matches. The flags state stays right, as it does for AppKit's
+    // NSEvent.modifierFlags. Drop this once SharpHook reads the flags state itself.
+    public ModifierKeys? CurrentModifiers() => NativeMethods.CurrentModifiers();
+
+    public IReadOnlyList<string> RunningAppNames() => IPlatformServices.AppNames(NativeMethods.WindowOwnerNames().ToList());
+
+    public IReadOnlyList<string> GetFileManagerSelection()
+    {
+        LastSelectionError = null;
+        if (!NativeMethods.IsFinderFrontmost())
+            return [];
+
+        try
+        {
+            var output = Run("/usr/bin/osascript", ["-l", "JavaScript", "-e", FinderSelectionScript], 30_000);
+            return ParseSelection(output).Where(path => File.Exists(path) || Directory.Exists(path)).ToArray();
+        }
+        catch (Exception ex) when (ex is IOException or TimeoutException or InvalidOperationException or JsonException)
+        {
+            LastSelectionError = ex.Message;
+            Trace.TraceWarning($"Reading Finder selection failed: {ex.Message}");
+            throw new InvalidOperationException($"Could not read Finder selection. Allow Lantern to control Finder in System Settings > Privacy & Security > Automation. {ex.Message}", ex);
+        }
+    }
+
+    public bool SupportsClipboard => true;
+
+    public ClipboardContent? ReadClipboard() => MacOSClipboard.Read();
+
+    public bool CopyToClipboard(IReadOnlyList<string> paths) => MacOSClipboard.Write(paths);
+
+    // AppKit exposes no public system drag-distance preference; match its usual four-point threshold.
+    public int SystemDragThreshold => 4;
+
+    public bool PrefersReducedMotion => NativeMethods.PrefersReducedMotion();
+
+    public void SetStartWithSystem(bool enabled, string executablePath)
+    {
+        var path = Path.Combine(UserLibrary, "LaunchAgents", "com.lantern.app.plist");
+        if (!enabled)
+        {
+            File.Delete(path);
+            return;
+        }
+
+        RequireExecutable(executablePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, MacOSIntegrationFiles.LaunchAgent(executablePath), new UTF8Encoding(false));
+    }
+
+    /// <summary>
+    /// Shows or hides Lantern's own service in Finder's right-click menu (the same switch as System Settings >
+    /// Keyboard > Keyboard Shortcuts > Services), and removes the Automator Quick Action earlier builds installed.
+    /// </summary>
+    public void SetContextMenu(bool enabled, string executablePath, string label)
+    {
+        RemoveLegacyWorkflow();
+        Run("/usr/bin/defaults", ["write", "pbs", "NSServicesStatus", "-dict-add",
+            MacOSIntegrationFiles.ServiceStatusKey, MacOSIntegrationFiles.ServiceStatus(enabled)], 10_000);
+        Run("/System/Library/CoreServices/pbs", ["-update"], 10_000);
+    }
+
+    private static void RemoveLegacyWorkflow()
+    {
+        var workflow = Path.Combine(UserLibrary, "Services", "Lantern.workflow");
+        if (Directory.Exists(workflow))
+            Directory.Delete(workflow, recursive: true);
+    }
+
+    public ModernContextMenuState GetModernContextMenuState(string executablePath) => ModernContextMenuState.Unsupported;
+
+    public Task<ModernContextMenuResult> SetModernContextMenuAsync(bool enabled, string executablePath) =>
+        Task.FromResult(new ModernContextMenuResult(false, Error: "The Windows Explorer extension is unavailable on macOS. Use the Finder Quick Action."));
+
+    public void RevealInFileManager(string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        Run("/usr/bin/open", File.Exists(fullPath) ? ["-R", fullPath] : [fullPath], 10_000);
+    }
+
+    /// <summary>Through open(1), like a double-click in Finder.</summary>
+    public void OpenFile(string path) => Run("/usr/bin/open", [Path.GetFullPath(path)], 10_000);
+
+    public void OpenAccessibilitySettings() =>
+        Run("/usr/bin/open", ["x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"], 10_000);
+
+    public void RaiseTopmost(nint windowHandle)
+    {
+        if (windowHandle != 0)
+            NativeMethods.RaiseTopmost(windowHandle);
+    }
+
+    public void MoveToActiveSpace(nint windowHandle)
+    {
+        if (windowHandle != 0)
+            NativeMethods.MoveToActiveSpace(windowHandle);
+    }
+
+    /// <summary>Restores a topmost window's native class and style after it hides or before it closes.</summary>
+    public void RestoreWindow(nint windowHandle)
+    {
+        if (windowHandle != 0)
+        {
+            if (_keyWindow == windowHandle)
+            {
+                _keyWindow = 0;
+                NativeMethods.ReleaseKeyWindow(windowHandle);
+            }
+            NativeMethods.RestoreWindow(windowHandle);
+        }
+    }
+
+    // The app the donut took the keyboard from (its process id), 0 for none.
+    private int _focusFrom;
+    private nint _keyWindow;
+
+    public void RememberFrontApp()
+    {
+        var front = NativeMethods.FrontmostProcessId();
+        _focusFrom = front != Environment.ProcessId ? front : 0;
+    }
+
+    public void ReturnFocus()
+    {
+        var keyWindow = _keyWindow;
+        _keyWindow = 0;
+        if (keyWindow != 0)
+            NativeMethods.ReleaseKeyWindow(keyWindow);
+
+        var from = _focusFrom;
+        _focusFrom = 0;
+        if (from != 0 && NativeMethods.FrontmostProcessId() == Environment.ProcessId)
+            NativeMethods.ActivateProcess(from);
+    }
+
+    public void TakeKeyWindow(nint windowHandle)
+    {
+        if (windowHandle == 0)
+            return;
+        _keyWindow = windowHandle;
+        NativeMethods.TakeKeyWindow(windowHandle);
+    }
+
+    public void ReleaseKeyWindow(nint windowHandle)
+    {
+        if (windowHandle == 0)
+            return;
+        if (_keyWindow == windowHandle)
+            _keyWindow = 0;
+        NativeMethods.ReleaseKeyWindow(windowHandle);
+    }
+
+    /// <summary>
+    /// Lets drags that offer file paths or file promises in older forms reach the window (the donut), not just ones
+    /// offering file URLs: other file managers than Finder write those (issue #160).
+    /// </summary>
+    public void AcceptFileDrags(nint windowHandle)
+    {
+        if (windowHandle != 0)
+            NativeMethods.AddDraggedTypes(windowHandle, PasteboardPaths.DragTypes);
+    }
+
+    internal static IReadOnlyList<string> ParseSelection(string json) =>
+        JsonSerializer.Deserialize<string[]>(json) ?? [];
+
+    private static string UserLibrary => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library");
+
+    private static void RequireExecutable(string path)
+    {
+        if (!Path.IsPathFullyQualified(path) || !File.Exists(path))
+            throw new FileNotFoundException("Lantern's executable must have an existing absolute path.", path);
+    }
+
+    private static string Run(string executable, IReadOnlyList<string> arguments, int timeoutMs)
+    {
+        var start = new ProcessStartInfo(executable)
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+        };
+        foreach (var argument in arguments)
+            start.ArgumentList.Add(argument);
+        using var process = Process.Start(start) ?? throw new IOException($"Could not start {executable}.");
+        var output = process.StandardOutput.ReadToEndAsync();
+        var error = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(timeoutMs))
+        {
+            try { process.Kill(entireProcessTree: true); }
+            catch (InvalidOperationException) { }
+            throw new TimeoutException($"{Path.GetFileName(executable)} did not respond within {timeoutMs / 1000} seconds.");
+        }
+        if (process.ExitCode != 0)
+            throw new IOException($"{Path.GetFileName(executable)} failed ({process.ExitCode}): {error.GetAwaiter().GetResult().Trim()}");
+        return output.GetAwaiter().GetResult();
+    }
+}

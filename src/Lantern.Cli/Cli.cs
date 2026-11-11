@@ -1,0 +1,607 @@
+// The "lantern" commands: convert, watch, formats, presets, engines. Writes results for people (one line per file) or, with
+// --json, one JSON document for other programs; while it runs, convert --json writes events to stderr and watch --json
+// to stdout, one JSON object per line. Exit codes: 0 nothing failed (skipped files included), 1 some failed or were
+// cancelled, 2 wrong arguments or a missing input, 3 nothing to convert.
+
+using System.Text.Json;
+using Lantern.Core.Conversion;
+using Lantern.Core.Formats;
+using Lantern.Core.Localization;
+using Lantern.Core.Platform;
+using Lantern.Core.Presets;
+using Lantern.Core.Watching;
+using Lantern.Engines.Infrastructure;
+
+namespace Lantern.Cli;
+
+internal static class Cli
+{
+    public const int Success = 0;
+    public const int SomeFailed = 1;
+    public const int UsageError = 2;
+    public const int NothingToDo = 3;
+
+    /// <param name="createHost">Engines and settings (tests pass a host with a temporary settings folder).</param>
+    public static async Task<int> RunAsync(IReadOnlyList<string> args, TextWriter output, TextWriter errors,
+        CancellationToken cancellationToken, Func<CliHost>? createHost = null)
+    {
+        var options = CliOptions.Parse(args);
+        if (options.Error is not null)
+        {
+            errors.WriteLine($"lantern: {options.Error}");
+            errors.WriteLine("Run 'lantern help' for usage.");
+            return UsageError;
+        }
+        switch (options.Command)
+        {
+            case "help":
+                output.Write(Help.Text(options.Inputs.FirstOrDefault()));
+                return Success;
+            case "version":
+                output.WriteLine($"lantern {Help.Version}");
+                return Success;
+        }
+
+        await using var host = (createHost ?? (() => CliHost.Create()))();
+        return options.Command switch
+        {
+            "convert" => await ConvertAsync(options, host, output, errors, cancellationToken),
+            "watch" => await WatchAsync(options, host, output, errors, cancellationToken),
+            "formats" => ListFormats(options, host, output, errors),
+            "engines" => await EnginesCommand.RunAsync(options, host, output, errors, cancellationToken),
+            _ => ListPresets(options, host, output),
+        };
+    }
+
+    private static async Task<int> ConvertAsync(CliOptions options, CliHost host, TextWriter output, TextWriter errors, CancellationToken cancellationToken)
+    {
+        if (ResolvePreset(options, host, errors) is not { } preset)
+            return UsageError;
+        if (options.Output is not null)
+            UseFolder(preset, options.Output);
+
+        var missing = new List<string>();
+        var files = ExpandInputs(options.Inputs, options.Recursive, missing,
+            foldersAsInputs: preset.TargetFormat == "iso" || preset.PacksIntoOneArchive);
+        foreach (var path in missing)
+            errors.WriteLine($"lantern: not found: {path}");
+        if (missing.Count > 0)
+            return UsageError;
+        if (files.Count == 0)
+        {
+            errors.WriteLine("lantern: no files to convert.");
+            return NothingToDo;
+        }
+        // Without it files stay as given, and a folder or wildcard as the file system lists it.
+        IReadOnlyList<string> ordered = options.Sort is { } sort
+            ? FileSorter.Sort(files.Select(FileStamp.Read).ToList(), file => file, sort, foldersTogether: true).Select(file => file.FilePath).ToList()
+            : files;
+
+        var events = options.Json && !options.Quiet ? new JobEvents(errors, host.Texts, host.Catalog, progress: true) : null;
+        var job = await RunJobAsync(ordered, preset, host, options.Json || options.Quiet ? null : output, events, cancellationToken);
+        var done = job.Files.Count(f => f.State == FileState.Done);
+        var failed = job.Files.Count(f => f.State is FileState.Failed or FileState.Cancelled);
+        if (options.Json)
+            WriteJson(job, host.Texts, host.Catalog, output);
+        else if (!options.Quiet)
+            output.WriteLine(failed == 0
+                ? $"Converted {done} of {job.Files.Count} file(s)."
+                : $"Converted {done} of {job.Files.Count} file(s), {failed} failed.");
+        return failed == 0 ? Success : SomeFailed;
+    }
+
+    private static async Task<int> WatchAsync(CliOptions options, CliHost host, TextWriter output, TextWriter errors, CancellationToken cancellationToken)
+    {
+        if (ResolvePreset(options, host, errors) is not { } preset)
+            return UsageError;
+        var rule = new WatchRule
+        {
+            // Unlike saved app rules, a CLI rule is recreated on every launch. Keep its generated-result state
+            // stable so an inbox writing into itself does not reprocess its outputs after restarting the command.
+            Id = "cli",
+            Folder = Path.GetFullPath(options.Inputs[0]),
+            IncludeSubfolders = options.Recursive,
+            OutputFolder = options.Output is null ? "" : Path.GetFullPath(options.Output),
+            Originals = options.MoveOriginals ? AfterConversion.MoveToOriginals : AfterConversion.Keep,
+        };
+        UseFolder(preset, rule.ResolvedOutputFolder);
+        preset.Output.KeepFoldersFrom = rule.Folder; // as the app's watch folders: subfolders stay subfolders
+
+        var settle = options.SettleSeconds is { } seconds ? TimeSpan.FromSeconds(seconds) : (TimeSpan?)null;
+        var events = options.Json && !options.Quiet ? new JobEvents(output, host.Texts, host.Catalog, progress: false) : null;
+        await using var watcher = new FolderWatcher(rule,
+            async (files, token) => await RunJobAsync(files, preset, host, options.Quiet || options.Json ? null : output, events, token),
+            settleTime: settle);
+        if (!watcher.Start())
+        {
+            errors.WriteLine($"lantern: {watcher.Error}");
+            return UsageError;
+        }
+        if (events is not null)
+            events.Started(rule.Folder, host.Texts.DisplayName(preset), preset.TargetFormat, rule.ResolvedOutputFolder);
+        else if (!options.Quiet)
+            output.WriteLine($"Watching {rule.Folder} → {host.Texts.DisplayName(preset)}, saving to {rule.ResolvedOutputFolder}. Press Ctrl+C to stop.");
+        try
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        if (events is not null)
+        {
+            await watcher.DisposeAsync(); // a running batch ends first, so its "file" events come before "stopped"
+            events.Stopped();
+        }
+        return Success;
+    }
+
+    /// <summary>
+    /// Runs one job and prints each file's result as soon as it is final: a line to <paramref name="output"/>, a "file"
+    /// event to <paramref name="events"/> (each when given), with "progress" events while files run.
+    /// </summary>
+    private static async Task<ConversionJob> RunJobAsync(IReadOnlyList<string> files, Preset preset, CliHost host, TextWriter? output,
+        JobEvents? events, CancellationToken cancellationToken)
+    {
+        var job = new ConversionJob(files, preset, host.Texts.DisplayName(preset),
+            folderSources: files.Where(Directory.Exists).ToHashSet(FileSystemPaths.Comparer));
+        var printed = new HashSet<FileResult>();
+        void Print(object? sender, ConversionJob updated)
+        {
+            if ((output is null && events is null) || updated != job)
+                return;
+            lock (printed)
+            {
+                // While the job runs, a file done with no output yet is only a step on the way (a page of a multi-page TIFF,
+                // a picture made PNG to be joined): it is printed at the end, with what it became and its notice. The queue
+                // always raises the event as itself; only the last call below, after the job, has no sender.
+                foreach (var file in job.Files.Where(f => f.State is not (FileState.Pending or FileState.Running)
+                             && (sender is null || f.State != FileState.Done || f.Outputs.Count > 0) && printed.Add(f)))
+                {
+                    output?.WriteLine(Describe(file, host.Texts));
+                    events?.File(file);
+                }
+                if (sender is not null)
+                    events?.Progress(job);
+            }
+        }
+
+        host.Queue.JobUpdated += Print;
+        try
+        {
+            using var _ = cancellationToken.Register(job.Cancel);
+            await host.Queue.RunAsync(job);
+        }
+        finally
+        {
+            host.Queue.JobUpdated -= Print;
+        }
+        Print(null, job);
+        return job;
+    }
+
+    private static string Describe(FileResult file, ILocalizer texts)
+    {
+        var source = Shorten(file.SourcePath);
+        return file.State switch
+        {
+            FileState.Done => $"ok    {source} -> {string.Join(", ", file.Outputs.Select(Shorten))}"
+                + (file.HasNotice ? $" ({Notice(file, texts)})" : "")
+                + (file.MissingFonts.Count == 0 ? "" : $" (missing fonts: {string.Join(", ", file.MissingFonts)})"),
+            FileState.Skipped => $"skip  {source} (the output file already exists)",
+            FileState.Cancelled => $"stop  {source} (cancelled)",
+            _ => $"fail  {source}: {Error(file, texts)}",
+        };
+    }
+
+    private static string Error(FileResult file, ILocalizer texts)
+    {
+        var message = file.ErrorKey is null ? "conversion failed" : texts[file.ErrorKey];
+        return string.IsNullOrWhiteSpace(file.ErrorDetail) ? message : $"{message} ({file.ErrorDetail})";
+    }
+
+    private static string Notice(FileResult file, ILocalizer texts) => texts.Notice(file);
+
+    /// <summary>Relative to the current folder when the file is inside it, else the full path.</summary>
+    private static string Shorten(string path)
+    {
+        var relative = Path.GetRelativePath(Environment.CurrentDirectory, path);
+        return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? path : relative;
+    }
+
+    private static void WriteJson(ConversionJob job, ILocalizer texts, ConverterCatalog catalog, TextWriter output)
+    {
+        var optional = new OptionalEngineRoutes(catalog);
+        using var stream = new MemoryStream();
+        using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+        {
+            json.WriteStartObject();
+            json.WriteString("preset", job.PresetDisplayName);
+            json.WriteString("target", job.Preset.TargetFormat);
+            json.WriteNumber("converted", job.Files.Count(f => f.State == FileState.Done));
+            json.WriteNumber("skipped", job.Files.Count(f => f.State == FileState.Skipped));
+            json.WriteNumber("failed", job.Files.Count(f => f.State is FileState.Failed or FileState.Cancelled));
+            json.WriteStartArray("files");
+            foreach (var file in job.Files)
+            {
+                json.WriteStartObject();
+                WriteFileFields(json, file, texts, optional);
+                json.WriteEndObject();
+            }
+            json.WriteEndArray();
+            json.WriteEndObject();
+        }
+        output.WriteLine(System.Text.Encoding.UTF8.GetString(stream.ToArray()));
+    }
+
+    /// <summary>A file's fields in the final document of 'convert --json', also those of its "file" event.</summary>
+    private static void WriteFileFields(Utf8JsonWriter json, FileResult file, ILocalizer texts, OptionalEngineRoutes optional)
+    {
+        json.WriteString("source", file.SourcePath);
+        json.WriteString("state", file.State.ToString().ToLowerInvariant());
+        json.WriteStartArray("outputs");
+        foreach (var path in file.Outputs)
+            json.WriteStringValue(path);
+        json.WriteEndArray();
+        if (file.State is FileState.Failed or FileState.Cancelled)
+            json.WriteString("error", Error(file, texts));
+        else if (file.HasNotice)
+            json.WriteString("notice", Notice(file, texts));
+        if (file.MissingFonts.Count > 0)
+        {
+            json.WriteStartArray("missingFonts");
+            foreach (var font in file.MissingFonts)
+                json.WriteStringValue(font);
+            json.WriteEndArray();
+        }
+        if (file.State is FileState.Failed or FileState.Cancelled && file.ErrorKey is not null)
+            json.WriteString("errorKey", file.ErrorKey);
+        if (file.State == FileState.Failed && file.ErrorKey == "error.no_route"
+            && file.FailedRoute is { } request && optional.MissingPackages(request) is { Count: > 0 } packages)
+            WriteStrings(json, "needsEngines", packages);
+    }
+
+    /// <summary>The preset from --to or --preset, with --quality and --overwrite/--skip applied (a copy).</summary>
+    private static Preset? ResolvePreset(CliOptions options, CliHost host, TextWriter errors)
+    {
+        Preset preset;
+        if (options.To is not null)
+        {
+            if (FindFormat(options.To) is not { } format)
+            {
+                errors.WriteLine($"lantern: unknown format '{options.To}'. Run 'lantern formats' for the list.");
+                return null;
+            }
+            if (!format.Writable)
+            {
+                errors.WriteLine($"lantern: Lantern reads {format.DisplayName} but can't write it.");
+                return null;
+            }
+            preset = new Preset { TargetFormat = format.Id };
+        }
+        else
+        {
+            var wanted = options.Preset!;
+            Preset? Find(IEnumerable<Preset> presets) =>
+                presets.FirstOrDefault(p => string.Equals(p.Id, wanted, StringComparison.OrdinalIgnoreCase))
+                ?? presets.FirstOrDefault(p => string.Equals(host.Texts.DisplayName(p), wanted, StringComparison.OrdinalIgnoreCase));
+            // Conversions first: a group of the same name (say a "Rotate" group next to your own "Rotate" preset)
+            // must not hide one. A group is only found to say what it holds.
+            var found = Find(host.Store.Presets.Where(p => !p.IsGroup && !p.IsTool)) ?? Find(host.Store.Presets);
+            if (found is null)
+            {
+                errors.WriteLine($"lantern: no preset '{wanted}'. Run 'lantern presets' for the list.");
+                return null;
+            }
+            if (found.IsGroup)
+            {
+                // A donut group converts nothing; name what it holds so the right one is easy to pick.
+                var members = found.SubPresetIds.Select(host.Store.FindConversion).OfType<Preset>().Select(p => p.Id).ToList();
+                errors.WriteLine(members.Count > 0
+                    ? $"lantern: '{wanted}' is a group on the donut, not a conversion. Use one of: {string.Join(", ", members)}"
+                    : $"lantern: '{wanted}' is a group on the donut, not a conversion, and has no presets left. Run 'lantern presets' for the list.");
+                return null;
+            }
+            if (found.IsTool)
+            {
+                errors.WriteLine($"lantern: '{wanted}' is an interactive tool, not a conversion.");
+                return null;
+            }
+            preset = found.Clone();
+        }
+        preset = host.Store.Settings.WithDefaultOutput(preset);
+        if (preset.Translate.Enabled && string.IsNullOrWhiteSpace(preset.Translate.Model))
+            preset.Translate.Model = host.Store.Settings.PreferredOllamaModel;
+        if (options.Quality is { } quality)
+            preset.Image.Quality = quality;
+        // The pages of PDFs; asked for on the donut (AskedPages), given here.
+        if (options.Pages is { } pages)
+            preset.Pdf.PageRange = pages;
+        // PDF → PDF in files of so many pages, or in equal parts (#1259), over the preset's split.
+        if (options.SplitEvery is { } every)
+            (preset.Pdf.SplitPages, preset.Pdf.SplitEvery, preset.Pdf.SplitParts) = (true, every, 0);
+        if (options.SplitParts is { } parts)
+            (preset.Pdf.SplitPages, preset.Pdf.SplitEvery, preset.Pdf.SplitParts) = (true, 0, parts);
+        if (options.Conflict is { } conflict)
+            preset.Output.Conflict = conflict;
+        if (options.KeepDates)
+            preset.Output.KeepDates = true;
+        if (options.Zip)
+            preset.Output.ZipResult = true;
+        return preset;
+    }
+
+    private static void UseFolder(Preset preset, string folder)
+    {
+        preset.Output.Location = OutputLocation.CustomFolder;
+        preset.Output.CustomFolder = Path.GetFullPath(folder);
+    }
+
+    /// <summary>A format by id ("jpg") or by extension ("jpeg", ".jpg").</summary>
+    internal static FileFormat? FindFormat(string text)
+    {
+        var key = text.Trim().TrimStart('.').ToLowerInvariant();
+        return FormatRegistry.FindById(key) ?? FormatRegistry.FindByExtension(key);
+    }
+
+    /// <summary>
+    /// Files from the arguments: files as given, wildcards ("*.heic", which cmd.exe and PowerShell pass on unexpanded)
+    /// and folders (their files in formats Lantern knows, programs left out as in watch folders: the installers in a folder
+    /// aren't pictures to convert; with --recursive also in sub folders).
+    /// </summary>
+    internal static List<string> ExpandInputs(IEnumerable<string> inputs, bool recursive, List<string> missing, bool foldersAsInputs = false)
+    {
+        var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        var files = new List<string>();
+        foreach (var input in inputs)
+        {
+            if (input.IndexOfAny(['*', '?']) >= 0)
+            {
+                var folder = Path.GetDirectoryName(input) is { Length: > 0 } dir ? dir : ".";
+                var matches = Directory.Exists(folder)
+                    ? Directory.EnumerateFiles(folder, Path.GetFileName(input), option).ToList()
+                    : [];
+                if (matches.Count == 0)
+                    missing.Add(input);
+                files.AddRange(matches);
+            }
+            else if (Directory.Exists(input))
+            {
+                if (foldersAsInputs) files.Add(Path.TrimEndingDirectorySeparator(input));
+                else files.AddRange(Directory.EnumerateFiles(input, "*", option)
+                    .Where(f => FormatRegistry.Detect(f) is not null && !FormatRegistry.IsProgram(f)));
+            }
+            else if (File.Exists(input))
+                files.Add(input);
+            else
+                missing.Add(input);
+        }
+        return files.Select(Path.GetFullPath).Distinct(FileSystemPaths.Comparer).ToList();
+    }
+
+    private static int ListFormats(CliOptions options, CliHost host, TextWriter output, TextWriter errors)
+    {
+        if (options.Inputs.FirstOrDefault() is { } name)
+        {
+            if (FindFormat(name) is not { } from)
+            {
+                errors.WriteLine($"lantern: unknown format '{name}'.");
+                return UsageError;
+            }
+            var installed = host.Catalog.CreatePlanner();
+            var optional = new OptionalEngineRoutes(host.Catalog);
+            var targets = FormatRegistry.Known.Where(t => t.Writable && t.Id != from.Id).ToList();
+            var now = targets.Where(t => installed.CanConvert(from.Id, t.Id)).Select(t => t.Id).ToList();
+            var later = targets.Where(t => !now.Contains(t.Id)
+                && optional.MissingPackages(new RouteRequest(from.Id, t.Id)) is not null).Select(t => t.Id).ToList();
+            if (options.Json)
+            {
+                WriteJsonDocument(output, json =>
+                {
+                    json.WriteStartObject();
+                    WriteFormatFields(json, from);
+                    WriteStrings(json, "targets", now);
+                    WriteStrings(json, "withEngines", later);
+                    json.WriteEndObject();
+                });
+                return Success;
+            }
+            output.WriteLine($"{from.DisplayName} ({string.Join(", ", from.Extensions)}) converts to:");
+            output.WriteLine(now.Count > 0 ? "  " + string.Join(", ", now) : "  (nothing with the engines installed now)");
+            if (later.Count > 0)
+                output.WriteLine($"With optional engines (install them with 'lantern engines'):{Environment.NewLine}  {string.Join(", ", later)}");
+            return Success;
+        }
+
+        if (options.Json)
+        {
+            WriteJsonDocument(output, json =>
+            {
+                json.WriteStartObject();
+                json.WriteStartArray("formats");
+                foreach (var format in FormatRegistry.Known.Where(f => f.Id != FormatRegistry.Folder))
+                {
+                    json.WriteStartObject();
+                    WriteFormatFields(json, format);
+                    json.WriteEndObject();
+                }
+                json.WriteEndArray();
+                json.WriteEndObject();
+            });
+            return Success;
+        }
+
+        foreach (var group in FormatRegistry.Known.Where(f => f.Id != FormatRegistry.Folder).GroupBy(f => f.Category))
+        {
+            output.WriteLine($"{group.Key}:");
+            foreach (var format in group)
+                output.WriteLine($"  {format.Id,-10} {format.DisplayName}{(format.Writable ? "" : " (read only)")}  .{string.Join(" .", format.Extensions)}");
+        }
+        output.WriteLine();
+        output.WriteLine("Run 'lantern formats <format>' to see what a format converts to.");
+        return Success;
+    }
+
+    /// <summary>The fields of one format in the JSON of 'formats': the same names for the list and for one format.</summary>
+    private static void WriteFormatFields(Utf8JsonWriter json, FileFormat format)
+    {
+        json.WriteString("id", format.Id);
+        json.WriteString("name", format.DisplayName);
+        json.WriteString("category", format.Category.ToString().ToLowerInvariant());
+        WriteStrings(json, "extensions", format.Extensions);
+        json.WriteBoolean("writable", format.Writable);
+    }
+
+    internal static void WriteStrings(Utf8JsonWriter json, string name, IEnumerable<string> values)
+    {
+        json.WriteStartArray(name);
+        foreach (var value in values)
+            json.WriteStringValue(value);
+        json.WriteEndArray();
+    }
+
+    internal static void WriteJsonDocument(TextWriter output, Action<Utf8JsonWriter> write)
+    {
+        using var stream = new MemoryStream();
+        using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+            write(json);
+        output.WriteLine(System.Text.Encoding.UTF8.GetString(stream.ToArray()));
+    }
+
+    private static int ListPresets(CliOptions options, CliHost host, TextWriter output)
+    {
+        if (options.Json)
+        {
+            WriteJsonDocument(output, json =>
+            {
+                json.WriteStartObject();
+                json.WriteStartArray("presets");
+                foreach (var preset in host.Store.Presets.Where(p => !p.IsGroup && !p.IsTool))
+                {
+                    json.WriteStartObject();
+                    json.WriteString("id", preset.Id);
+                    json.WriteString("name", host.Texts.DisplayName(preset));
+                    json.WriteString("target", preset.TargetFormat);
+                    json.WriteEndObject();
+                }
+                json.WriteEndArray();
+                json.WriteEndObject();
+            });
+            return Success;
+        }
+        output.WriteLine($"{"ID",-24} {"NAME",-28} TARGET");
+        foreach (var preset in host.Store.Presets.Where(p => !p.IsGroup && !p.IsTool))
+            output.WriteLine($"{preset.Id,-24} {host.Texts.DisplayName(preset),-28} {preset.TargetFormat}");
+        output.WriteLine();
+        output.WriteLine("Use one with: lantern convert <files> --preset <id or name>");
+        return Success;
+    }
+
+    /// <summary>
+    /// The events of 'convert --json' (to stderr) and 'watch --json' (to stdout), one JSON object per line. A "file" event
+    /// has the fields of the file's entry in the final document. "progress" (convert only) comes when a running file's
+    /// fraction moves past 0 or changes, at most about every 150 ms per file, like the progress of 'engines install'.
+    /// </summary>
+    private sealed class JobEvents(TextWriter writer, ILocalizer texts, ConverterCatalog catalog, bool progress)
+    {
+        private const long ProgressIntervalMs = 150;
+        private readonly Lock _gate = new();
+        private readonly OptionalEngineRoutes _optional = new(catalog);
+        private readonly Dictionary<FileResult, (double Fraction, long At)> _reported = [];
+
+        public void Started(string folder, string preset, string target, string outputFolder)
+        {
+            lock (_gate)
+                WriteLine("started", json =>
+                {
+                    json.WriteString("folder", folder);
+                    json.WriteString("preset", preset);
+                    json.WriteString("target", target);
+                    json.WriteString("outputFolder", outputFolder);
+                });
+        }
+
+        public void File(FileResult file)
+        {
+            lock (_gate)
+            {
+                _reported.Remove(file);
+                WriteLine("file", json => WriteFileFields(json, file, texts, _optional));
+            }
+        }
+
+        public void Progress(ConversionJob job)
+        {
+            if (!progress)
+                return;
+            var now = Environment.TickCount64;
+            lock (_gate)
+            {
+                foreach (var file in job.Files.Where(f => f.State == FileState.Running))
+                {
+                    var fraction = Math.Round(Math.Clamp(file.Progress, 0, 1), 4);
+                    var (lastFraction, lastAt) = _reported.GetValueOrDefault(file, (0.0, now - ProgressIntervalMs));
+                    if (fraction == lastFraction || now - lastAt < ProgressIntervalMs)
+                        continue;
+                    _reported[file] = (fraction, now);
+                    WriteLine("progress", json =>
+                    {
+                        json.WriteString("source", file.SourcePath);
+                        json.WriteNumber("fraction", fraction);
+                    });
+                }
+            }
+        }
+
+        public void Stopped()
+        {
+            lock (_gate)
+                WriteLine("stopped", _ => { });
+        }
+
+        private void WriteLine(string name, Action<Utf8JsonWriter> write)
+        {
+            using var stream = new MemoryStream();
+            using (var json = new Utf8JsonWriter(stream))
+            {
+                json.WriteStartObject();
+                json.WriteString("event", name);
+                write(json);
+                json.WriteEndObject();
+            }
+            writer.WriteLine(System.Text.Encoding.UTF8.GetString(stream.ToArray()));
+            writer.Flush();
+        }
+    }
+
+    private sealed class OptionalEngineRoutes
+    {
+        private readonly ConverterCatalog _catalog;
+        private readonly RoutePlanner _installed;
+        private readonly RoutePlanner _optional;
+        private readonly Dictionary<string, IReadOnlyList<string>> _packages;
+
+        public OptionalEngineRoutes(ConverterCatalog catalog)
+        {
+            _catalog = catalog;
+            _packages = EngineDownloads.Packages.SelectMany(p => p.ConverterIds.Select(id => (Converter: id, Package: p.Id)))
+                .GroupBy(p => p.Converter).ToDictionary(g => g.Key, g => (IReadOnlyList<string>)g.Select(p => p.Package).ToList());
+            _installed = catalog.CreatePlanner();
+            _optional = catalog.CreatePlanner(catalog.All
+                .Where(c => _packages.ContainsKey(c.Id) && catalog.StatusOf(c).ReasonKey != "engine.reason.unsupported_platform")
+                .Select(c => c.Id).ToList());
+        }
+
+        public IReadOnlyList<string>? MissingPackages(RouteRequest request)
+        {
+            if (Plan(_installed) is not null || Plan(_optional) is not { } route)
+                return null;
+            var packages = route.Steps.Where(s => !_catalog.StatusOf(s.Converter).IsAvailable)
+                .SelectMany(s => _packages[s.Converter.Id]).Distinct().ToList();
+            return packages.Count > 0 ? packages : null;
+
+            Route? Plan(RoutePlanner planner) => planner.Plan(request.Source, request.Target, frames: request.Frames,
+                shaping: request.Shaping, motionPhoto: request.MotionPhoto, livePhoto: request.LivePhoto, ocr: request.Ocr, metadata: request.Metadata);
+        }
+    }
+}
