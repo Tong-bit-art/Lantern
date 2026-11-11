@@ -12,8 +12,8 @@
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
-using Lantern.Engines.Magick;
 using ImageMagick;
+using Lantern.Engines.Magick;
 
 namespace Lantern.Engines.Hwp.Hwpx.Docx;
 

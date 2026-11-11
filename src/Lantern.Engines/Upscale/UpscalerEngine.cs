@@ -2,11 +2,11 @@
 
 using System.Globalization;
 using System.Text.RegularExpressions;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Upscale;
 

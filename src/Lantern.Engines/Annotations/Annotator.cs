@@ -2,9 +2,9 @@
 // are laid over the picture, only over the part the marks cover and a band at a time, so a huge picture needs no second
 // copy of itself. The picture as it is seen: before it is turned or resized.
 
+using ImageMagick;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
-using ImageMagick;
 using SkiaSharp;
 
 namespace Lantern.Engines.Annotations;

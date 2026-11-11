@@ -4,11 +4,11 @@
 
 using System.IO.Compression;
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
 using Lantern.Engines.Hwp.Hwpx;
-using ImageMagick;
 using Unhwp;
 using static Lantern.Engines.Tests.HwpxAssert;
 

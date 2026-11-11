@@ -5,11 +5,11 @@
 
 using System.IO.Compression;
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Email;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

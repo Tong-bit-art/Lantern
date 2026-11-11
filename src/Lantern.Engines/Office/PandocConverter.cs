@@ -13,13 +13,13 @@
 // another computer), and the result is written from the AST with those pictures alone.
 
 using System.Text.Json.Nodes;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Office;
 

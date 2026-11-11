@@ -8,12 +8,12 @@ using ACadSharp;
 using ACadSharp.Entities;
 using ACadSharp.IO;
 using ACadSharp.Types.Units;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Vector;
 using Lantern.Engines.Vector.Tracing;
-using ImageMagick;
 using SkiaSharp;
 
 namespace Lantern.Engines.Tests;

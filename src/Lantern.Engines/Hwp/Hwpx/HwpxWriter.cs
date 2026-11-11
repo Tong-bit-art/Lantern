@@ -12,8 +12,8 @@ using System.IO.Compression;
 using System.Security;
 using System.Text;
 using System.Xml.Linq;
-using Lantern.Engines.Magick;
 using ImageMagick;
+using Lantern.Engines.Magick;
 
 namespace Lantern.Engines.Hwp.Hwpx;
 

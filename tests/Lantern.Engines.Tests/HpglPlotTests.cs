@@ -2,11 +2,11 @@
 // The packed HP-GL/2 sample (PE) was encoded independently of Lantern's decoder, so the test is not circular.
 
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Vector;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

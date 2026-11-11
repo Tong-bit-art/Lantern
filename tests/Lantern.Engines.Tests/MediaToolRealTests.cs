@@ -6,11 +6,11 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Media;
-using ImageMagick;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 

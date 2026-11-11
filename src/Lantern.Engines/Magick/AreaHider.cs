@@ -2,8 +2,8 @@
 // pixelated, blurred or blacked out as its style says. Each part is changed on its own; the rest of the picture keeps
 // its pixels. Also used on the window's preview, so what the user sees while drawing the parts is what the file gets.
 
-using Lantern.Core.Presets;
 using ImageMagick;
+using Lantern.Core.Presets;
 
 namespace Lantern.Engines.Magick;
 

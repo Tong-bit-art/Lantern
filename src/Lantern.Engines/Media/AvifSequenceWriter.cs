@@ -6,8 +6,8 @@
 // FFmpeg's APNG demuxer hands on frame for frame. Without FFmpeg, ImageEncoder.Write writes the sequence as before.
 
 using System.Globalization;
-using Lantern.Engines.Magick;
 using ImageMagick;
+using Lantern.Engines.Magick;
 
 namespace Lantern.Engines.Media;
 

@@ -1,9 +1,9 @@
 // Rotate and flip presets: the image turns and mirrors the way the preset names say.
 
-using Lantern.Core.Conversion;
-using Lantern.Core.Presets;
 using ImageMagick;
 using ImageMagick.Drawing;
+using Lantern.Core.Conversion;
+using Lantern.Core.Presets;
 
 namespace Lantern.Engines.Tests;
 

@@ -4,10 +4,10 @@
 using System.Buffers.Binary;
 using System.Globalization;
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

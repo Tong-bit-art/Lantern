@@ -1,9 +1,9 @@
 // A floating logo in the header of a Word document, through rhwp to PDF (issue #1152).
 
 using System.IO.Compression;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 using UglyToad.PdfPig;
 using static Lantern.Engines.Tests.DocxBuilder;
 

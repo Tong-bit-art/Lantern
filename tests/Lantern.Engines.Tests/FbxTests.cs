@@ -2,11 +2,11 @@
 // with plain and compressed arrays, and ASCII; then converted through the job queue or read directly.
 
 using System.Numerics;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Models3D;
-using ImageMagick;
 using SharpGLTF.Schema2;
 using static Lantern.Engines.Tests.FbxBuilder;
 

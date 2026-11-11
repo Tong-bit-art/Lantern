@@ -2,10 +2,10 @@
 // follows the picture's size; a highlight lets the picture show through; text and numbers draw (Korean too); the rest
 // of the picture keeps its pixels; and the tool runs as an ordinary conversion in the picture's own format.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Annotations;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

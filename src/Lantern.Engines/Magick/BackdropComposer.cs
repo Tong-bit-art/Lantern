@@ -4,9 +4,9 @@
 // brush and drop shadow are Skia's), so the file looks like the preview.
 
 using System.Runtime.InteropServices;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 using SkiaSharp;
 
 namespace Lantern.Engines.Magick;

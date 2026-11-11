@@ -3,11 +3,11 @@
 
 using System.Buffers.Binary;
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Media;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

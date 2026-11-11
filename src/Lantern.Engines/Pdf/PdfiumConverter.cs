@@ -2,12 +2,12 @@
 // multi-page TIFF or GIF, or (PdfOptions.CombinePages) the pages stacked into one tall image. PDFium renders RGB: a
 // document drawn in CMYK (a print file, issue #1027) is rendered by Ghostscript instead when the target holds CMYK.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Vector;
-using ImageMagick;
 using PDFtoImage;
 using SkiaSharp;
 

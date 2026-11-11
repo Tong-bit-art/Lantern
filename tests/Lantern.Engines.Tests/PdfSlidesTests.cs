@@ -8,13 +8,13 @@ using System.Xml.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
 using Lantern.Engines.Hwp.Hwpx.Pptx;
 using Lantern.Engines.Pdf;
-using ImageMagick;
 using PdfSharp.Pdf.IO;
 using P = DocumentFormat.OpenXml.Presentation;
 

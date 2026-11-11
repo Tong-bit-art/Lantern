@@ -4,12 +4,12 @@
 
 using System.IO.Compression;
 using System.Text;
+using ImageMagick;
+using ImageMagick.Drawing;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Ocr;
-using ImageMagick;
-using ImageMagick.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 

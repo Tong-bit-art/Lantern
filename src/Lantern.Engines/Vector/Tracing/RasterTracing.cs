@@ -2,9 +2,9 @@
 // upright, in sRGB), reduces very large pictures, traces them and writes the SVG at the picture's own pixel size.
 
 using System.Globalization;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Vector.Tracing;
 

@@ -3,10 +3,10 @@
 
 using System.Text;
 using System.Xml.Linq;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
-using ImageMagick;
 using static Lantern.Engines.Tests.HwpxAssert;
 
 namespace Lantern.Engines.Tests;

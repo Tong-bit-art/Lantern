@@ -3,9 +3,9 @@
 // arrive in the OWPML structure 한글 uses. Every file is also checked for package validity and rendered by rhwp.
 
 using System.Xml.Linq;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 using static Lantern.Engines.Tests.DocxBuilder;
 using static Lantern.Engines.Tests.HwpxAssert;
 

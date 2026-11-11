@@ -1,8 +1,8 @@
 // "Trim transparent borders" (issue #332): a copy cropped to the visible pixels, run through the real image engine.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

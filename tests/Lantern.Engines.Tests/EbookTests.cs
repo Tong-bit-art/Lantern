@@ -4,10 +4,10 @@
 using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Ebooks;
-using ImageMagick;
 using PdfSharp.Pdf.IO;
 
 namespace Lantern.Engines.Tests;

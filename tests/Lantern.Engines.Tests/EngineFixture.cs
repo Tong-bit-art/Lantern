@@ -1,9 +1,9 @@
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
 using Lantern.Engines;
 using Lantern.Engines.Infrastructure;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

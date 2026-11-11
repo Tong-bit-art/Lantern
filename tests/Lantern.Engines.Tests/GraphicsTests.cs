@@ -3,12 +3,12 @@
 
 using System.IO.Compression;
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Icns;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Vector;
-using ImageMagick;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 using SkiaSharp;

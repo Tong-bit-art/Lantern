@@ -2,13 +2,13 @@
 // the converter around a stand-in recognizer run everywhere; AppleVisionTests read real pictures on macOS only.
 
 using System.Collections.Concurrent;
+using ImageMagick;
+using ImageMagick.Drawing;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Ocr;
-using ImageMagick;
-using ImageMagick.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 using UglyToad.PdfPig.Core;

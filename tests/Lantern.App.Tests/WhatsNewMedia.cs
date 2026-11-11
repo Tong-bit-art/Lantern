@@ -19,6 +19,8 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using ImageMagick;
+using ImageMagick.Drawing;
 using Lantern.App.Controls;
 using Lantern.App.Services;
 using Lantern.App.ViewModels;
@@ -28,8 +30,6 @@ using Lantern.App.Views.Pages;
 using Lantern.Core.Localization;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
-using ImageMagick;
-using ImageMagick.Drawing;
 using static Avalonia.VisualExtensions;
 
 namespace Lantern.App.Tests;

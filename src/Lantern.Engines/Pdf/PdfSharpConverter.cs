@@ -3,12 +3,12 @@
 // It also finishes every PDF a job writes with a watermark, page numbers or a password (PdfFinishing).
 
 using System.Runtime.ExceptionServices;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Vector;
-using ImageMagick;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;

@@ -3,13 +3,13 @@
 // document; what it would write otherwise than asked fails the copy instead. Its converter is the only engine a
 // conversion with changes takes. The ExifTool tests need one on this computer (PATH or LANTERN_TEST_EXIFTOOL).
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Media;
 using Lantern.Engines.Metadata;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

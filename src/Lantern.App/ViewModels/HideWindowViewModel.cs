@@ -10,12 +10,12 @@ using Avalonia;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ImageMagick;
 using Lantern.App.Controls;
 using Lantern.App.Services;
 using Lantern.Core.Localization;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
-using ImageMagick;
 using Microsoft.Extensions.Logging;
 
 namespace Lantern.App.ViewModels;

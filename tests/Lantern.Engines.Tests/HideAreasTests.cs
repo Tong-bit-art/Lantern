@@ -3,10 +3,10 @@
 // pixel, the parts land on the picture as it is seen (EXIF orientation), the format stays, and the previews a file
 // carries of the uncovered picture go.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

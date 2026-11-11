@@ -11,6 +11,7 @@ using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using ImageMagick;
 using Lantern.App.Services;
 using Lantern.App.ViewModels;
 using Lantern.App.Views;
@@ -18,7 +19,6 @@ using Lantern.Core.Localization;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.App.Tests;
 

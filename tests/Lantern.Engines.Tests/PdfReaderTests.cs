@@ -6,11 +6,11 @@
 
 using System.IO.Compression;
 using System.Text.RegularExpressions;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
 using Lantern.Engines.Pdf;
-using ImageMagick;
 using static Lantern.Engines.Tests.DocxAssert;
 
 namespace Lantern.Engines.Tests;

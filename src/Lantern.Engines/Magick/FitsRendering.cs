@@ -12,9 +12,9 @@
 // Files that say ROWORDER = 'BOTTOM-UP' are turned upright; others are taken as stored top-down, as capture programs
 // write them.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 
 namespace Lantern.Engines.Magick;
 

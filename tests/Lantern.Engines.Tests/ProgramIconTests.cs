@@ -4,10 +4,10 @@
 // the icon that went in.
 
 using System.Buffers.Binary;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

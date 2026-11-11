@@ -8,10 +8,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Xml.Linq;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Office;
-using ImageMagick;
 using UglyToad.PdfPig;
 
 namespace Lantern.Engines.Tests;

@@ -3,11 +3,11 @@
 // files refused like the other PDF conversions, and Ghostscript's rewrite when it is installed. The PDFs are built in
 // the tests: photos (noise, so they don't compress to nothing) drawn small at a high resolution, and Helvetica text.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Pdf;
 using Lantern.Engines.Vector;
-using ImageMagick;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;

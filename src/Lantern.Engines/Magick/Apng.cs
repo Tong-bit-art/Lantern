@@ -6,9 +6,9 @@
 
 using System.Buffers.Binary;
 using System.Text;
-using Lantern.Engines.Archives;
 using ImageMagick;
 using ImageMagick.Formats;
+using Lantern.Engines.Archives;
 
 namespace Lantern.Engines.Magick;
 

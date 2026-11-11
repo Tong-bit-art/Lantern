@@ -6,11 +6,11 @@ using System.Buffers.Binary;
 using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Media;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

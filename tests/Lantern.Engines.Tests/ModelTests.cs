@@ -6,10 +6,10 @@ using System.IO.Compression;
 using System.Numerics;
 using System.Text;
 using System.Text.Json.Nodes;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Models3D;
-using ImageMagick;
 using SharpGLTF.Schema2;
 
 namespace Lantern.Engines.Tests;

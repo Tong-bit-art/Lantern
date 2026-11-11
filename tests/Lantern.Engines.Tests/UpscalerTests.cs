@@ -1,8 +1,8 @@
 using System.IO;
+using ImageMagick;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Upscale;
-using ImageMagick;
 using Xunit;
 
 namespace Lantern.Engines.Tests;

@@ -3,10 +3,10 @@
 // and moved into place at the end, the pair together.
 
 using System.Globalization;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Heic;
-using ImageMagick;
 
 namespace Lantern.Engines.Media;
 

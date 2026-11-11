@@ -2,9 +2,9 @@
 // PNG (a flat screenshot, a diagram). Its pixels come out at 8 bits a channel, four bytes each, in their real colours;
 // reading them as the picture's own depth gave an eighth of the bytes, and the window then read past their end.
 
-using Lantern.App.Services;
 using ImageMagick;
 using ImageMagick.Drawing;
+using Lantern.App.Services;
 
 namespace Lantern.App.Tests;
 

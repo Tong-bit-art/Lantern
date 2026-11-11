@@ -1,6 +1,6 @@
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 using PdfSharp.Pdf.IO;
 
 namespace Lantern.Engines.Tests;

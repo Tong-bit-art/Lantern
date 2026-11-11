@@ -1,11 +1,11 @@
 // Tajima DST embroidery designs (issue #397): the stitch records decoded, drawn as SVG and rendered to PNG through the
 // vector engine. The test designs are written here record by record, as embroidery software writes them.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Vector;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

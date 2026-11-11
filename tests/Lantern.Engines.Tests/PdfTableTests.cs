@@ -3,10 +3,10 @@
 // paragraphs around them. Boxes,
 // underlines and empty grids stay what they were. The PDFs are drawn here with the standard 14 fonts.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
-using ImageMagick;
 using static Lantern.Engines.Tests.DocxAssert;
 
 namespace Lantern.Engines.Tests;

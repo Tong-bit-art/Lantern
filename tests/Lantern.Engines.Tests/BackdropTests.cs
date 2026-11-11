@@ -2,11 +2,11 @@
 // the corners are cut round (the background shows there), the shadow falls below the picture, a gradient runs from
 // one colour to the other, a picture of one's own covers the canvas, and the tool runs as an ordinary conversion.
 
+using ImageMagick;
+using ImageMagick.Drawing;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
-using ImageMagick;
-using ImageMagick.Drawing;
 
 namespace Lantern.Engines.Tests;
 

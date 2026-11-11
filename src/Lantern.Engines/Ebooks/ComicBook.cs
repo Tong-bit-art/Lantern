@@ -4,10 +4,10 @@
 // (fixed layout) or CBZ; PDF becomes CBZ by rendering its pages with PDFium.
 
 using System.IO.Compression;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Platform;
 using Lantern.Engines.Pdf;
-using ImageMagick;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PDFtoImage;

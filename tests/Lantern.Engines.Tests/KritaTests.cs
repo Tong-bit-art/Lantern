@@ -2,10 +2,10 @@
 // Krita lays the file out.
 
 using System.IO.Compression;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

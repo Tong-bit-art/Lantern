@@ -4,10 +4,10 @@
 
 using System.IO.Compression;
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Office;
-using ImageMagick;
 using UglyToad.PdfPig;
 
 namespace Lantern.Engines.Tests;

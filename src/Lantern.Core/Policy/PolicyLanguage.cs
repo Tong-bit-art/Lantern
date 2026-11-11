@@ -176,91 +176,91 @@ public sealed record PolicyTest(
         {
             case PolicyOperator.Equals:
             case PolicyOperator.NotEquals:
-            {
-                var equal = ValuesEqual(left, Operand, comparison);
-                explanation = $"{Fact}={left} {(equal ? "=" : "!=")} {Operand}";
-                return Operator is PolicyOperator.Equals ? equal : !equal;
-            }
+                {
+                    var equal = ValuesEqual(left, Operand, comparison);
+                    explanation = $"{Fact}={left} {(equal ? "=" : "!=")} {Operand}";
+                    return Operator is PolicyOperator.Equals ? equal : !equal;
+                }
 
             case PolicyOperator.GreaterThan:
             case PolicyOperator.GreaterOrEqual:
             case PolicyOperator.LessThan:
             case PolicyOperator.LessOrEqual:
-            {
-                if (!left.IsNumber || !Operand.IsNumber)
                 {
-                    explanation = $"{Fact} ({left}) and {Operand} are not both numbers";
-                    return false;
+                    if (!left.IsNumber || !Operand.IsNumber)
+                    {
+                        explanation = $"{Fact} ({left}) and {Operand} are not both numbers";
+                        return false;
+                    }
+                    var a = left.AsNumber();
+                    var b = Operand.AsNumber();
+                    var result = Operator switch
+                    {
+                        PolicyOperator.GreaterThan => a > b,
+                        PolicyOperator.GreaterOrEqual => a >= b,
+                        PolicyOperator.LessThan => a < b,
+                        _ => a <= b,
+                    };
+                    explanation = $"{Fact}={a.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)} "
+                        + $"{OperatorSymbol()} {b.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}";
+                    return result;
                 }
-                var a = left.AsNumber();
-                var b = Operand.AsNumber();
-                var result = Operator switch
-                {
-                    PolicyOperator.GreaterThan => a > b,
-                    PolicyOperator.GreaterOrEqual => a >= b,
-                    PolicyOperator.LessThan => a < b,
-                    _ => a <= b,
-                };
-                explanation = $"{Fact}={a.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)} "
-                    + $"{OperatorSymbol()} {b.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}";
-                return result;
-            }
 
             case PolicyOperator.Contains:
             case PolicyOperator.StartsWith:
             case PolicyOperator.EndsWith:
-            {
-                var haystack = left.IsList
-                    ? string.Join("\u001f", left.AsList())
-                    : left.AsText();
-                var needle = Operand.IsList ? string.Join("\u001f", Operand.AsList()) : Operand.AsText();
-                var result = Operator switch
                 {
-                    PolicyOperator.Contains => haystack.Contains(needle, comparison),
-                    PolicyOperator.StartsWith => haystack.StartsWith(needle, comparison),
-                    _ => haystack.EndsWith(needle, comparison),
-                };
-                explanation = $"{Fact}=\"{haystack}\" {Operator} \"{needle}\"";
-                return result;
-            }
-
-            case PolicyOperator.InSet:
-            {
-                // Either side may be the set: a fact holding a list is tested against a literal, or a
-                // scalar fact is tested against a literal list.
-                var candidates = left.IsList ? left.AsList() : [left.AsText()];
-                var allowed = Operand.IsList ? Operand.AsList() : [Operand.AsText()];
-                var hit = candidates.Any(candidate => allowed.Any(a => string.Equals(a, candidate, comparison)));
-                explanation = $"{Fact}={left} in {Operand}";
-                return hit;
-            }
-
-            case PolicyOperator.Matches:
-            {
-                if (Operand.AsText() is not { Length: > 0 } pattern)
-                {
-                    explanation = "empty pattern";
-                    return false;
-                }
-                try
-                {
-                    var regex = new System.Text.RegularExpressions.Regex(
-                        pattern,
-                        (CaseSensitive ? System.Text.RegularExpressions.RegexOptions.None : System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-                        | System.Text.RegularExpressions.RegexOptions.CultureInvariant,
-                        TimeSpan.FromMilliseconds(100));
-                    var result = regex.IsMatch(left.AsText());
-                    explanation = $"\"{left.AsText()}\" {Operator} /{pattern}/";
+                    var haystack = left.IsList
+                        ? string.Join("\u001f", left.AsList())
+                        : left.AsText();
+                    var needle = Operand.IsList ? string.Join("\u001f", Operand.AsList()) : Operand.AsText();
+                    var result = Operator switch
+                    {
+                        PolicyOperator.Contains => haystack.Contains(needle, comparison),
+                        PolicyOperator.StartsWith => haystack.StartsWith(needle, comparison),
+                        _ => haystack.EndsWith(needle, comparison),
+                    };
+                    explanation = $"{Fact}=\"{haystack}\" {Operator} \"{needle}\"";
                     return result;
                 }
-                catch (ArgumentException)
+
+            case PolicyOperator.InSet:
                 {
-                    // A malformed pattern is a policy authoring error. Failing the test instead of
-                    // throwing keeps one bad rule from halting an entire batch.
-                    explanation = $"invalid pattern /{pattern}/";
-                    return false;
+                    // Either side may be the set: a fact holding a list is tested against a literal, or a
+                    // scalar fact is tested against a literal list.
+                    var candidates = left.IsList ? left.AsList() : [left.AsText()];
+                    var allowed = Operand.IsList ? Operand.AsList() : [Operand.AsText()];
+                    var hit = candidates.Any(candidate => allowed.Any(a => string.Equals(a, candidate, comparison)));
+                    explanation = $"{Fact}={left} in {Operand}";
+                    return hit;
                 }
-            }
+
+            case PolicyOperator.Matches:
+                {
+                    if (Operand.AsText() is not { Length: > 0 } pattern)
+                    {
+                        explanation = "empty pattern";
+                        return false;
+                    }
+                    try
+                    {
+                        var regex = new System.Text.RegularExpressions.Regex(
+                            pattern,
+                            (CaseSensitive ? System.Text.RegularExpressions.RegexOptions.None : System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                            | System.Text.RegularExpressions.RegexOptions.CultureInvariant,
+                            TimeSpan.FromMilliseconds(100));
+                        var result = regex.IsMatch(left.AsText());
+                        explanation = $"\"{left.AsText()}\" {Operator} /{pattern}/";
+                        return result;
+                    }
+                    catch (ArgumentException)
+                    {
+                        // A malformed pattern is a policy authoring error. Failing the test instead of
+                        // throwing keeps one bad rule from halting an entire batch.
+                        explanation = $"invalid pattern /{pattern}/";
+                        return false;
+                    }
+                }
 
             default:
                 explanation = $"unsupported operator {Operator}";

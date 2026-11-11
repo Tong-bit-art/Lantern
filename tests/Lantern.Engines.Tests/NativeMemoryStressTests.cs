@@ -5,10 +5,10 @@
 // LANTERN_STRESS_SECONDS runs it longer (the default keeps CI time low).
 
 using System.Runtime;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

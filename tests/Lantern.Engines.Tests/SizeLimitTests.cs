@@ -2,12 +2,12 @@
 // picture tests use ImageMagick in-process; the video ones run only when Lantern's FFmpeg is installed
 // (`pwsh build/fetch-engines.ps1 -Only ffmpeg`), on inputs FFmpeg generates itself.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Media;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

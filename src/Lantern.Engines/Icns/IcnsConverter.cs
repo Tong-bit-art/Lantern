@@ -1,10 +1,10 @@
 // macOS icons (.icns) without macOS: writes them from any raster image and reads them back, built in.
 // The container is handled by IcnsFile; ImageMagick resizes and encodes/decodes the PNG and JPEG 2000 entries.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Icns;
 

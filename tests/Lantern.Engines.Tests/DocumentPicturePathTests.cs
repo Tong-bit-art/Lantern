@@ -6,13 +6,13 @@
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Office;
 using Lantern.Engines.Text;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

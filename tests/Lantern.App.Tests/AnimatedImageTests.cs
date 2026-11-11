@@ -6,8 +6,8 @@ using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
-using Lantern.App.Controls;
 using ImageMagick;
+using Lantern.App.Controls;
 
 namespace Lantern.App.Tests;
 

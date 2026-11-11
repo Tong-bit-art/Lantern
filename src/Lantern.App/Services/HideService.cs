@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using ImageMagick;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.App.Services;
 

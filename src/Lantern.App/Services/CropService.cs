@@ -2,13 +2,13 @@
 
 using System.IO;
 using Avalonia.Media.Imaging;
+using ImageMagick;
 using Lantern.App.Controls;
 using Lantern.Core.Localization;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Pdf;
-using ImageMagick;
 using Microsoft.Extensions.Logging;
 
 namespace Lantern.App.Services;

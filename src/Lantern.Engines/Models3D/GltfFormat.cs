@@ -7,8 +7,8 @@
 
 using System.Numerics;
 using System.Text.Json.Nodes;
-using Lantern.Engines.Magick;
 using ImageMagick;
+using Lantern.Engines.Magick;
 using SharpGLTF.Memory;
 using SharpGLTF.Schema2;
 using SharpGLTF.Validation;

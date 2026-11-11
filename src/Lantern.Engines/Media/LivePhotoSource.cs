@@ -3,8 +3,8 @@
 
 using System.IO.Compression;
 using System.Xml;
-using Lantern.Core.Conversion;
 using ImageMagick;
+using Lantern.Core.Conversion;
 using Microsoft.Extensions.Logging;
 
 namespace Lantern.Engines.Media;

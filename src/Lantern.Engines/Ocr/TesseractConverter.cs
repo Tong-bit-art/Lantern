@@ -11,11 +11,11 @@
 // downloaded the first time a language is used, and is copied into the job's folder so Tesseract reads only it. A
 // preset can name several languages (#1123): each one's data is there, and Tesseract gets them all (-l chi_sim+eng).
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Pdf;
-using ImageMagick;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;

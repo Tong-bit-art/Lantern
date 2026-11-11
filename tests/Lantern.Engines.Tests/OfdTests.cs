@@ -7,11 +7,11 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
 using Lantern.Engines.Ofd;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

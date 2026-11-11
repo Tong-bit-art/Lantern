@@ -2,8 +2,8 @@
 // a bitmap for raster targets.
 
 using System.IO.Compression;
-using Lantern.Core.Presets;
 using ImageMagick;
+using Lantern.Core.Presets;
 using SkiaSharp;
 using Svg;
 using Svg.Model;

@@ -6,10 +6,10 @@
 // program. Used by every engine that takes a raster image as input.
 
 using System.Buffers.Binary;
-using Lantern.Core.Formats;
-using Lantern.Core.Presets;
 using ImageMagick;
 using ImageMagick.Formats;
+using Lantern.Core.Formats;
+using Lantern.Core.Presets;
 
 namespace Lantern.Engines.Magick;
 

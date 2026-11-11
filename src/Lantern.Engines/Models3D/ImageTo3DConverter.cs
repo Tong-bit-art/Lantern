@@ -2,11 +2,11 @@
 // brightness, on a flat base.
 
 using System.Numerics;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Models3D;
 

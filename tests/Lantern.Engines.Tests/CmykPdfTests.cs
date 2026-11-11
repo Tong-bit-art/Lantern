@@ -2,9 +2,9 @@
 // page shows the picture's colours; read back with PDFsharp, the image is CMYK with the source's samples.
 
 using System.IO.Compression;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;

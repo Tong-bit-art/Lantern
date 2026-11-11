@@ -2,11 +2,11 @@
 // values when Ghostscript is installed (those tests are skipped without it); RGB documents and other targets keep
 // PDFium's RGB rendering. The documents are written with PDFsharp in CMYK colour mode, so their fills use the k operator.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Pdf;
 using Lantern.Engines.Vector;
-using ImageMagick;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 

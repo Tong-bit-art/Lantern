@@ -1,11 +1,11 @@
 // The less common raster formats ImageMagick (Magick.NET Q8) reads and writes for Lantern: every one is checked against
 // the coders the bundled build really has, then converted there and back. Inputs are generated in the tests.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 

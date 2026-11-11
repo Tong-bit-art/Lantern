@@ -10,9 +10,9 @@
 // A JPEG picture goes into the PDF as it is; other pictures (and a JPEG turned by its EXIF orientation) as PNG, every
 // page of a TIFF.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Engines.Pdf;
-using ImageMagick;
 
 namespace Lantern.Engines.Ocr;
 

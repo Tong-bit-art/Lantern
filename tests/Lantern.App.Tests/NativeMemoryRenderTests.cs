@@ -10,9 +10,9 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using ImageMagick;
 using Lantern.App.Controls;
 using Lantern.App.Services;
-using ImageMagick;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Lantern.App.Tests;

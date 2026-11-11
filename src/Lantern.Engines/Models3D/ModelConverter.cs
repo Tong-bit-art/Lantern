@@ -3,11 +3,11 @@
 // isometric preview picture.
 // See docs/ENGINES.md, "3D models", for units, axes and what each format keeps.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
-using ImageMagick;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 

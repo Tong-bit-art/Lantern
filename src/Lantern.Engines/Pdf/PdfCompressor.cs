@@ -6,8 +6,8 @@
 // drawings stay as they are. A picture is changed only when the result is smaller.
 
 using System.IO.Compression;
-using Lantern.Core.Presets;
 using ImageMagick;
+using Lantern.Core.Presets;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.Content;

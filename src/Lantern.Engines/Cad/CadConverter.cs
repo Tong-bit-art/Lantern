@@ -1,10 +1,10 @@
 // DWG / DXF conversion without AutoCAD: ACadSharp (MIT) reads DWG R13–2018+ and DXF (ASCII and binary) and writes
 // DXF and DWG; the drawing is rendered with SkiaSharp to PDF (vector), SVG and raster images.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
-using ImageMagick;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SkiaSharp;

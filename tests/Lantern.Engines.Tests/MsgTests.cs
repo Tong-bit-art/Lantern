@@ -3,9 +3,9 @@
 
 using System.IO.Compression;
 using System.Text;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 using MimeKit;
 
 namespace Lantern.Engines.Tests;

@@ -7,13 +7,13 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Threading;
+using ImageMagick;
 using Lantern.App.Services;
 using Lantern.App.ViewModels;
 using Lantern.App.Views;
 using Lantern.Core.Conversion;
 using Lantern.Core.Localization;
 using Lantern.Core.Settings;
-using ImageMagick;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 

@@ -2,9 +2,9 @@
 // colour between them. The layout is worked out from the pictures' sizes first, so only one picture at a time (and the
 // merged image) is in memory.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
-using ImageMagick;
 
 namespace Lantern.Engines.Magick;
 

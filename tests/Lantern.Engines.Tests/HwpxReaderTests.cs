@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
@@ -14,7 +15,6 @@ using Lantern.Engines.Hwp.Hwpx.Docx;
 using Lantern.Engines.Hwp.Hwpx.Pptx;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Office.Sheets;
-using ImageMagick;
 using static Lantern.Engines.Tests.DocxBuilder;
 
 namespace Lantern.Engines.Tests;

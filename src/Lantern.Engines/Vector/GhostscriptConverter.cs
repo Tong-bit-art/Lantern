@@ -5,11 +5,11 @@
 // (PdfSharpConverter calls CompressPdfAsync; there is no PDF → PDF edge here, so routes don't change), and
 // PdfiumConverter has CMYK pages rendered here for a CMYK JPG or TIFF (RenderCmykAsync).
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
-using ImageMagick;
 using PdfSharp.Pdf.IO;
 
 namespace Lantern.Engines.Vector;

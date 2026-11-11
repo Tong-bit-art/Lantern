@@ -1,8 +1,8 @@
 // A picture cropped in Word or WPS (a:srcRect): the file keeps the whole picture (issue #280).
 
+using ImageMagick;
 using Lantern.Engines.Hwp.Hwpx;
 using Lantern.Engines.Hwp.Hwpx.Docx;
-using ImageMagick;
 using static Lantern.Engines.Tests.DocxBuilder;
 
 namespace Lantern.Engines.Tests;

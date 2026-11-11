@@ -4,11 +4,11 @@
 // the layout the model carries survives (page setup, sections, headers, tables, objects, notes, formatting).
 
 using System.IO.Compression;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Hwp.Hwpx;
 using Lantern.Engines.Hwp.Hwpx.Docx;
-using ImageMagick;
 using static Lantern.Engines.Tests.DocxAssert;
 using static Lantern.Engines.Tests.DocxBuilder;
 

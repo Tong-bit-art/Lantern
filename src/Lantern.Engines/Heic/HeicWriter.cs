@@ -2,11 +2,11 @@
 // encodes it as HEVC tiles and HeifFile puts them into the HEIC container with the colour profile and Exif.
 
 using System.Globalization;
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Magick;
 using Lantern.Engines.Media;
-using ImageMagick;
 
 namespace Lantern.Engines.Heic;
 

@@ -1,10 +1,10 @@
 // Shared ImageMagick logic: applies preset ImageOptions and writes frames in the requested format.
 // Used by MagickImageConverter and by PdfiumConverter (PDF pages → images).
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Core.Presets;
-using ImageMagick;
 
 namespace Lantern.Engines.Magick;
 

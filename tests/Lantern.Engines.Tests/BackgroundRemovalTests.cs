@@ -1,10 +1,10 @@
 // "Remove background": signatures, stamps and logos on paper or a plain backdrop become transparent PNGs.
 
+using ImageMagick;
+using ImageMagick.Drawing;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Magick;
-using ImageMagick;
-using ImageMagick.Drawing;
 
 namespace Lantern.Engines.Tests;
 

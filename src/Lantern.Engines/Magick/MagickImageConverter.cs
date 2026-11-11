@@ -1,11 +1,11 @@
 // Raster image ↔ raster image conversion with ImageMagick (Magick.NET, Apache-2.0). Animations → AVIF are encoded by
 // FFmpeg when it is installed (Media/AvifSequenceWriter), much faster than ImageMagick's own AVIF sequence writer.
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Formats;
 using Lantern.Engines.Infrastructure;
 using Lantern.Engines.Media;
-using ImageMagick;
 
 namespace Lantern.Engines.Magick;
 

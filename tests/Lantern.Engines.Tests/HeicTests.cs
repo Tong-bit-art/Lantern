@@ -2,11 +2,11 @@
 // libheif, an independent decoder. The real conversions run only when Lantern's FFmpeg is installed
 // (`pwsh build/fetch-engines.ps1 -Only ffmpeg`).
 
+using ImageMagick;
 using Lantern.Core.Conversion;
 using Lantern.Core.Presets;
 using Lantern.Engines.Heic;
 using Lantern.Engines.Media;
-using ImageMagick;
 
 namespace Lantern.Engines.Tests;
 
