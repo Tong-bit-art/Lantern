@@ -134,10 +134,28 @@ diff -r upstream/src/Filee.Core/Policy src/Lantern.Core/Policy 2>&1 | head -1
 
 ## Timestamps and history
 
-The repository is initialised with a commit sequence that separates the three kinds of change, so
-that `git log` itself is evidence of method: a baseline import, then mechanical rename, then
-identity replacement, then the original module with its tests. A reviewer reading the log sees the
-work being done in the order it was done, not a single opaque squashed commit.
+The repository has three commits:
+
+```
+dac35df  Add conversion policy engine and its test suite
+b6a44ed  Rename Filee to Lantern across the tree
+d185564  Import Filee 2.4.0 baseline (upstream 47e24cd3)
+```
+
+One caveat, stated plainly because a history document that hides its own imperfections is worth
+less than one that names them. The rename and the identity replacements were performed in the
+working tree before the repository was initialised, so `d185564` contains the tree *after* those
+edits, not a pristine vendoring of upstream. What that commit does establish precisely is the
+baseline's contents without the policy engine: `git ls-tree d185564` contains no `Policy`
+directory, and `dac35df` is the only commit that adds one, as a self-contained 1,929-line change.
+
+The consequence for a reviewer is that `git diff` between `d185564` and upstream does **not** show
+the renames one at a time. To see those, use `FORK-CHANGES.md` sections 1 and 2, which list them
+exhaustively, or diff the trees directly against the pinned baseline commit. The policy engine, by
+contrast, is fully isolated in the history and can be read as one atomic addition.
+
+The stronger provenance evidence is therefore not the commit order but the diff against upstream at
+a known SHA, and that is what the verification section above uses.
 
 ## Limits of this statement
 
