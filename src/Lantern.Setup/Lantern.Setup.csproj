@@ -48,6 +48,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <!-- LZMA for the payload (the engines use it already for downloads). -->
     <PackageReference Include="SharpCompress" />
+    <PackageReference Include="SkiaSharp" />
   </ItemGroup>
 
   <!-- Shared with the app: its look, icon and translations. -->
