@@ -1,0 +1,50 @@
+LANTERN — UPSTREAM BASELINE RECORD
+==================================
+
+This file pins the exact upstream revision this fork was started from. It exists so that
+the provenance of every file in this repository can be established: a reviewer can check
+out this commit, diff it against this repository, and see precisely which lines originated
+upstream and which were written here.
+
+Upstream project
+----------------
+Name             : Filee
+Repository       : https://github.com/KnifeLemon/Filee
+License          : MIT
+Copyright holder : Copyright (c) 2026 Myeonggu Kim (KnifeLemon) and Filee contributors
+
+Baseline commit
+---------------
+Commit SHA   : 47e24cd3311b00b7fae75e36a8c3e98b0fe72b24
+Commit date  : 2026-11-11 07:32:18 +0900
+Commit title : Merge pull request #1363 from KnifeLemon/feat/engine-import-export-447
+Version      : 2.4.0 (Directory.Build.props)
+
+How to reproduce the baseline
+-----------------------------
+    git clone https://github.com/KnifeLemon/Filee.git filee-upstream
+    cd filee-upstream
+    git checkout 47e24cd3311b00b7fae75e36a8c3e98b0fe72b24
+
+How this fork relates to it
+---------------------------
+Lantern began as a copy of the baseline tree. The changes applied on top of it fall into
+three groups, itemised in FORK-CHANGES.md:
+
+1. Mechanical rename: identifiers, namespaces, project names, assembly names, asset file
+   names, environment variable prefixes, data directory names, registry keys and the
+   installer identity. No logic changed in this pass.
+2. Identity removal and replacement: the upstream update signing key, the upstream
+   Authenticode publisher and issuer, the upstream repository URL, the vendor name and the
+   installer GUID were all replaced or emptied. See FORK-CHANGES.md for the rationale; the
+   point is that no artifact of this fork can be mistaken for, overwrite, or be updated by
+   an installation of upstream Filee.
+3. Original work: the conversion policy engine under src/Lantern.Core/Policy/, its tests
+   under tests/Lantern.Core.Tests/Policy/, and this documentation set under EVIDENCE/.
+   These files have no upstream counterpart. EVIDENCE/ORIGINALITY.md explains how to verify
+   that claim mechanically.
+
+What was NOT done
+-----------------
+No upstream source file was deleted to hide its origin. No copyright header was stripped.
+The upstream MIT notice is retained verbatim in LICENSE alongside this fork's own notice.
