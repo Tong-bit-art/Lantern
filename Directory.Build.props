@@ -18,7 +18,7 @@
     <Product>Lantern</Product>
     <Authors>Tong-bit-art</Authors>
     <Company>Tong-bit-art</Company>
-    <Copyright>Copyright (c) 2026 Tong-bit-art. Portions copyright (c) 2026 Myeonggu Kim (KnifeLemon) and Lantern contributors, used under the MIT License.</Copyright>
+    <Copyright>Copyright (c) 2026 Tong-bit-art and Lantern contributors. Portions copyright (c) 2026 Myeonggu Kim (KnifeLemon) and Filee contributors, used under the MIT License.</Copyright>
 
     <!-- Single source of truth for the GitHub repository (used by the updater and the About page). -->
     <LanternRepositoryUrl>https://github.com/Tong-bit-art/Lantern</LanternRepositoryUrl>

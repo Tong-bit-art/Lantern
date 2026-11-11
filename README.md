@@ -1,21 +1,55 @@
-# Lantern
+<p align="center">
+  <img src="docs/media/social-preview.png" alt="Lantern — describe the policy once, drop the files" width="100%">
+</p>
 
-**A file converter that lets you write down how your batch should be handled, once, and doesn't
-make you re-decide it every time.**
+<h1 align="center">Lantern</h1>
 
-Drag files onto a format. The conversion happens on your machine. The result lands next to the
-original.
+<p align="center">
+  <b>Write down how a batch should be handled, once.</b><br>
+  A 280-format offline file converter with a declarative policy engine.
+</p>
 
-Lantern is a fork of [Filee](https://github.com/KnifeLemon/Filee). What is new here is a rules
-layer on top of the converter: instead of configuring each file by hand, you describe the policy
-once and the engine applies it to everything you drop.
+<p align="center">
+  <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
+  <img alt="Avalonia 12" src="https://img.shields.io/badge/Avalonia-12-8B44AC">
+  <img alt="Windows 10 | 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-3C3489">
+  <img alt="Linux x64 | ARM64" src="https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-3C3489">
+  <img alt="macOS preview" src="https://img.shields.io/badge/macOS-preview-534AB7">
+  <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-6A62C9">
+  <img alt="Status: source only" src="https://img.shields.io/badge/status-source%20only-lightgrey">
+</p>
 
-> **Status: source only, v1.0.0.** No release has been published yet, so there is nothing to
-> download — build it from source with the steps below. There is also no code-signing certificate
-> and no update signing key, which means: if you build a Windows installer yourself, SmartScreen
-> will warn about it, and the auto-updater is inert until those are provisioned. Both are stated
-> here rather than buried, because a project page that claims more than it has is worse than a
-> short one.
+<p align="center">
+  <a href="#build"><b>Build</b></a> ·
+  <a href="#the-policy-file">policy.json</a> ·
+  <a href="FORK-CHANGES.md">Fork changes</a> ·
+  <a href="docs/UPSTREAM.md">Upstream tracking</a> ·
+  <a href="ROADMAP.md">Roadmap</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="SUPPORT.md">Support</a>
+</p>
+
+> [!IMPORTANT]
+> **Lantern is a fork of [Filee](https://github.com/KnifeLemon/Filee) (MIT).** All format conversion
+> is upstream's work. What is new here is the declarative policy layer, its tests, and the installer
+> identity split that lets the two coexist. [`FORK-CHANGES.md`](FORK-CHANGES.md) itemises every
+> change and [`NOTICE`](NOTICE) records the derivation. Problems that a stock Filee would also have
+> belong in [Filee's tracker](https://github.com/KnifeLemon/Filee/issues), not here.
+
+> [!NOTE]
+> **Source only, v1.0.0 — no release published yet.** Nothing to download; build from source. There
+> is no code-signing certificate and no update signing key, so SmartScreen will warn about an
+> installer you build and the auto-updater is inert. Stated up front rather than buried.
+
+## Contents
+
+- [Why the rules layer exists](#why-the-rules-layer-exists)
+- [The policy file](#the-policy-file) — [conflict resolution](#how-conflicts-are-settled) · [facts](#facts-you-can-test) · [operators](#operators)
+- [What you get from upstream](#what-you-get-from-upstream-unchanged)
+- [Build](#build)
+- [How this repo relates to Filee](#how-this-repo-relates-to-filee)
+- [What is not provisioned](#what-is-not-provisioned)
+- [Licence](#licence)
 
 ---
 
@@ -24,7 +58,7 @@ once and the engine applies it to everything you drop.
 A converter normally decides *what a file becomes*. It does not decide *how a whole batch should
 be treated*. Those are different problems, and the second one is where batch work actually hurts.
 
-Four things the preset model cannot express, and this fork can:
+Four things the preset model cannot express, and this fork is designed to:
 
 **Per-file-type defaults in one pass.** Your camera writes HEIC and your screenshot tool writes
 PNG. You want the first kept at quality 92 and the second crushed to WEBP at 82. Without rules
@@ -216,10 +250,36 @@ This fork cannot coexist with a Filee installation if it keeps upstream's identi
 
 - No code-signing certificate. Windows installers built from this tree will trigger SmartScreen.
 - No update signing key. The updater falls back to same-release checksum verification.
-- No published release and no CI run.
+- No published release. CI runs, but the workflow inherited from upstream has not yet passed on this
+  repository, which is why there is no status badge on this page.
 
 Populating either requires generating a key pair with `build/new-update-key.ps1` and buying an
 Authenticode certificate.
+
+## Code signing policy
+
+**Nothing published so far is signed**, because there is nothing published. When a release exists:
+
+- Windows binaries will be signed with an Authenticode certificate issued to Tong-bit-art.
+- Every release will carry a `SHA256SUMS` file; the updater verifies it against the key embedded at
+  build time (`FileeUpdatePublicKey` in `Directory.Build.props`, empty today).
+- An update whose signature does not verify is refused on every platform.
+
+Until those are provisioned, the updater accepts only a same-release checksum match, and an
+installer you build yourself is unsigned by definition. That is the honest state of it.
+
+## Privacy policy
+
+Lantern converts files on your own computer and never uploads them. It collects no usage data and
+sends no telemetry. It makes network requests only to:
+
+- Ask GitHub (`api.github.com`) whether a newer release exists, shortly after start and then every
+  few hours. Turn this off in Settings → About.
+- Download the optional conversion engines you choose to install, from the official locations
+  pinned in `engines.json`, and the OCR language data a preset uses, pinned in `ocr-languages.json`.
+- Open a link, when you click one. That opens your browser.
+
+The policy engine does no I/O at all: it evaluates a fact table in memory.
 
 ## Licence
 
@@ -233,3 +293,9 @@ identity, update key or signing certificate.
 
 - Upstream project: [KnifeLemon/Filee](https://github.com/KnifeLemon/Filee)
 - This fork: [Tong-bit-art/Lantern](https://github.com/Tong-bit-art/Lantern)
+
+## Thanks
+
+To Myeonggu Kim (KnifeLemon) and the Filee contributors, whose MIT-licensed work this builds on.
+
+<!-- sponsors: src/Lantern.App/Assets/Sponsors/sponsors.json -->

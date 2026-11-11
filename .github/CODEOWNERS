@@ -1,3 +1,16 @@
-# Every change needs the maintainer's review before it reaches main (the "Protect main" ruleset requires a code
-# owner's approval).
-* @KnifeLemon
+# Code owners
+
+# Review requests go to the fork's maintainer. GitHub only requests a review from someone who
+# has write access to *this* repository; listing the upstream maintainer here would silently
+# never fire, and would block merges if "Require review from Code Owners" were ever enabled.
+#
+# Branch protection is configured in Settings → Rules → Rulesets, not in this file.
+
+*                   @Tong-bit-art
+
+/.github/           @Tong-bit-art
+/LICENSE            @Tong-bit-art
+/NOTICE             @Tong-bit-art
+/FORK-CHANGES.md    @Tong-bit-art
+/UPSTREAM-BASELINE.txt @Tong-bit-art
+/EVIDENCE/          @Tong-bit-art

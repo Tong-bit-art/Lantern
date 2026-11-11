@@ -3,6 +3,60 @@
 What changed in each version of Lantern, for the people using it. The release workflow puts the section of the
 version it publishes under "What's Changed" in the GitHub release notes, above the list of pull requests.
 
+**Version numbering:** Lantern has its own series, starting at `1.0.0`. The Filee version numbers further down
+(`2.4.0`, `2.3.0`, …) are upstream's history, imported unchanged when this fork was made. A Lantern version is not
+comparable to a Filee version; see [`docs/UPSTREAM.md`](docs/UPSTREAM.md).
+
+## [1.0.0] - 2026-11-11
+
+The first Lantern release. Source only: no installer, no binaries, because no code-signing certificate and no
+update signing key are provisioned yet.
+
+### Added
+
+- **Declarative conversion policy engine** (`src/Lantern.Core/Policy/`), original to this fork:
+  - `policy.json` with rules, priorities, specificity tie-breaking and sealed guard rails.
+  - Thirteen operators, four combine modes, nestable conditions.
+  - Per-decision trace: which rules matched, what each test compared, which value won.
+  - Lenient reader that drops one bad test rather than the whole file.
+  - 27 tests covering merge semantics, tie-breaks, operator edge cases, persistence round-trips and the
+    shipped starter policy.
+- Seven-rule starter policy: photo quality preservation, bulk-document merging, upload size limits,
+  meaningful-name preservation, and a sealed refusal to overwrite a source file.
+- `EVIDENCE/` with an architecture reconstruction report, an originality statement and a verification log.
+
+### Changed
+
+- Installer identity replaced so Lantern and Filee can coexist on one machine: new GUID, registry keys,
+  startup entry, shell verb, data directories, cache folders and single-instance mutex.
+- Data directory is now `%APPDATA%\Lantern` / `~/.config/Lantern`, overridable with `LANTERN_DATA_DIR`.
+- Update endpoint points at this repository. Upstream's update signing key and expected Authenticode
+  publisher/issuer were emptied rather than replaced: they gate update acceptance, and the matching private
+  material belongs to the upstream maintainer.
+- Version restarts at `1.0.0`.
+
+### Removed
+
+- Upstream's funding accounts (`.github/FUNDING.yml`), which would have sent sponsorship money to the upstream
+  maintainer for work done here.
+- Upstream's release, download and CI badges, third-party rank badges, and Microsoft Store link, none of which
+  described this repository.
+- Upstream brand imagery from `docs/`: banners, screenshots and its social preview, all carrying the Filee
+  wordmark. Replaced with an original mark and social card.
+
+### Notes
+
+- Conversion capability is upstream's work, unchanged. See [`FORK-CHANGES.md`](FORK-CHANGES.md).
+- The policy engine is complete and tested but is **not yet consulted by `ConversionService`**; wiring it into
+  the conversion path is the next piece of work. See [`ROADMAP.md`](ROADMAP.md).
+
+---
+
+## Upstream history (Filee, imported unchanged)
+
+<details>
+<summary><b>Filee 2.4.0 and earlier</b> — historical, not Lantern releases</summary>
+
 Add a `## <version>` section before tagging a release. Write what someone using Lantern notices: what's new, where to
 find it, what it does and doesn't do.
 
@@ -55,7 +109,7 @@ zh: 新语言：孟加拉语、波斯语
 
 ### Security
 
-Fixes for two advisories, [GHSA-gw2f-hq9g-3jc2](https://github.com/Tong-bit-art/Lantern/security/advisories/GHSA-gw2f-hq9g-3jc2) (reported by @indhuchocky-bit) and [GHSA-hfq7-46jj-38qw](https://github.com/Tong-bit-art/Lantern/security/advisories/GHSA-hfq7-46jj-38qw) (reported by @jojofox0815 and @indhuchocky-bit). Thank you both. Please update.
+Fixes for two advisories, [GHSA-gw2f-hq9g-3jc2](https://github.com/KnifeLemon/Filee/security/advisories/GHSA-gw2f-hq9g-3jc2) (reported by @indhuchocky-bit) and [GHSA-hfq7-46jj-38qw](https://github.com/KnifeLemon/Filee/security/advisories/GHSA-hfq7-46jj-38qw) (reported by @jojofox0815 and @indhuchocky-bit). Thank you both. Please update.
 
 - **Updates:** from this version on, the updater checks a signature over the release's checksums with a key kept in Lantern, and checks the publisher of the installer it downloaded.
 - **Pictures and links in documents:** HTML, Markdown and Pandoc documents only take pictures and style sheets from their own folder, and network shares are refused. LibreOffice gets a copy without outside links, and its macro and link settings are fixed for each conversion. If a document has macros, you get a notice that they weren't run.
@@ -1657,3 +1711,5 @@ zh: 更新通知会显示重要程度和更新内容
 
 - Ctrl+drag stopped working after the Photos app had been opened, until Lantern was restarted. The donut now stays on
   top of other windows.
+
+</details>

@@ -41,7 +41,17 @@ public class SupportersTests
         var folder = Path.Combine(RepoRoot, "src", "Lantern.App", "Assets", "Sponsors");
         var list = Supporters.Parse(File.ReadAllText(Path.Combine(folder, "sponsors.json")));
 
-        foreach (var readme in new[] { "README.md", "docs/readme/README.ko.md", "docs/readme/README.zh-CN.md", "docs/readme/README.pt-BR.md", "docs/readme/README.fr.md" })
+        // This fork ships one README (English). Translated readmes go in docs/readme/ when
+        // contributors submit them, so the check covers whatever exists rather than a fixed list
+        // naming files this repository does not have.
+        var readmes = new List<string> { "README.md" };
+        var translated = Path.Combine(RepoRoot, "docs", "readme");
+        if (Directory.Exists(translated))
+            readmes.AddRange(Directory.EnumerateFiles(translated, "README*.md")
+                .Select(path => Path.GetRelativePath(RepoRoot, path))
+                .Select(path => path.Replace('\\', '/')));
+
+        foreach (var readme in readmes)
         {
             var text = File.ReadAllText(Path.Combine(RepoRoot, readme));
             Assert.Contains("<!-- sponsors: src/Lantern.App/Assets/Sponsors/sponsors.json -->", text);
