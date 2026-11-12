@@ -10,7 +10,8 @@ because:
 - No Authenticode certificate. A Windows installer built from this tree warns under SmartScreen.
 - No update signing key. `LanternUpdatePublicKey` in `Directory.Build.props` is empty, so the
   updater accepts only a same-release checksum match.
-- The macOS and Windows-ARM64 package jobs do not pass in CI (see below).
+- The Windows-ARM64 job's missing engines are now published by this repository, so it has what it
+  fetches; the remaining CI failure is the arm64 macOS dylib (see below).
 
 A tag is still worth making: it gives the CHANGELOG a version to point at, it gives people a
 snapshot to build from, and it makes the download badge tell the truth instead of saying "no
@@ -56,20 +57,24 @@ unsigned installer is worse than one that ships nothing, because somebody will r
 
 ### Known failing jobs
 
-`build (win-arm64)`, `portable / portable (macos-15, osx-arm64)` and `portable / portable
-(macos-15-intel, osx-x64)` do not pass. Two causes, both from this fork not owning upstream's
-infrastructure:
+`build (win-arm64)` and `portable / portable (macos-15, osx-arm64)` / `(macos-15-intel, osx-x64)` do
+not pass. The original cause — this fork owning none of upstream's download infrastructure — is now
+half fixed, and what is left is different in each case.
 
-- **win-arm64 and macOS** fetch prebuilt engine binaries from a download mirror that belongs to the
-  upstream project. This fork has none. `fetch-engines.ps1` now warns and skips the two ARM64-only
-  engines instead of failing outright, which is why the job gets further than it used to, but the
-  build still cannot complete without those files.
-- **macOS** additionally needs `Magick.Native-Q8-*.dll.dylib` built for macOS 13, hosted somewhere
-  reachable. `build/fetch-magick-native.ps1` says so and refuses rather than downloading from
-  somebody else's bucket.
-
-Fixing either means publishing those artifacts under this project's own name — a GitHub release
-works. That is a piece of work in its own right, listed on `ROADMAP.md`.
+- **win-arm64: fixed.** `windows-arm64-native.yml` builds rhwp 0.8.7 and Unhwp 0.13.0 from their pinned
+  sources and, with `publish` set, puts them on the `native-win-arm64` release of this repository.
+  `fetch-engines.ps1` pins those URLs and their SHA-256; both were downloaded back and checked, and both
+  are ARM64. The job has what it needs.
+- **macOS x64: fixed.** `magick-native-macos.yml` built `Magick.Native-Q8-x64.dll.dylib` for macOS 13
+  and published it to `native-magick-macos`; `fetch-magick-native.ps1` pins it. Verified by downloading
+  and reading the Mach-O header.
+- **macOS arm64: blocked upstream.** Dependencies' `macos-arm64/install.sh` — fetched from upstream at
+  build time, not present in this repository — uninstalls zstd and then asserts `zstd should not be
+  installed`, while the formulas it installs are linked against that library. The leg dies resolving its
+  own tools. The library is not missing and not the wrong architecture; the log shows a valid arm64
+  Mach-O at exactly the path dyld reports as missing. It is marked `continue-on-error` for arm64 only so
+  the failure is visible without hiding the x64 result. Fixing it means changing that upstream script,
+  or pinning an older Magick.Native whose dependencies do not have the contradiction.
 
 **This is why there is no CI badge in the README.** A badge that reads "failing" on the front page
 of a project is worse than no badge. It goes back when the jobs pass.
@@ -80,6 +85,6 @@ of a project is worse than no badge. It goes back when the jobs pass.
 2. A key pair from `build/new-update-key.ps1`, with the public half set as
    `LanternUpdatePublicKey` in `Directory.Build.props`. Without it, an installed copy cannot verify
    a later release and will refuse to update.
-3. Engine artifacts published somewhere this project controls, so the ARM64 and macOS jobs can
-   complete.
+3. The arm64 macOS dylib, which is blocked on an upstream script that removes the zstd its own formulas
+   need — see `docs/RELEASING.md`. Everything else those jobs needed is now published by this repository.
 4. A decision about who signs for macOS, which needs an Apple Developer account for notarisation.
