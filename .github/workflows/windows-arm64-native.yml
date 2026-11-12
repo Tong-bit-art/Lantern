@@ -98,11 +98,9 @@ jobs:
           path: ${{ runner.temp }}/out/
           if-no-files-found: error
 
-      # Publishes the two files to a release of this repository, which is the hosting this fork needs:
-      # fetch-engines.ps1 has pins pointing at example.invalid because there was nowhere to put them.
-      # A release asset is a stable public URL, so the pins can point at it and the win-arm64 build stops
-      # depending on a mirror somebody else owns. Off unless asked: a PR that touches the build should not
-      # create releases.
+      # Publishes the two files to a release of this repository, which is where build/fetch-engines.ps1's
+      # $arm64Pins point. A release asset is a stable public URL, so the pins stop depending on a mirror
+      # somebody else owns. Off unless asked: a PR that touches the build should not create releases.
       - name: Publish to a release
         if: ${{ inputs.publish }}
         env:

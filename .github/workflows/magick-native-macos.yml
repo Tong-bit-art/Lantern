@@ -59,6 +59,8 @@ jobs:
             arch: x64
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
+    permissions:
+      contents: write # only used when publish is set: creating the release and uploading to it
     defaults:
       run:
         shell: bash
@@ -141,9 +143,12 @@ jobs:
           TAG: ${{ inputs.tag }}
           REPO: ${{ github.repository }}
         run: |
+          # Both matrix legs run this at the same time and may both try to create the release; a failure
+          # because the other leg won that race is not a failure of this leg.
           if ! gh release view "$TAG" --repo "$REPO" --json assets >/dev/null 2>&1; then
             gh release create "$TAG" --repo "$REPO" --title "Native engines $TAG" \
-              --notes "Prebuilt native engines this fork pins. Not an application release." --prerelease
+              --notes "Prebuilt native engines this fork pins. Not an application release." --prerelease \
+              || gh release view "$TAG" --repo "$REPO" --json assets >/dev/null
           fi
           existing=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' 2>/dev/null || true)
           for file in out/*; do
