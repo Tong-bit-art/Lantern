@@ -49,15 +49,16 @@ env:
 jobs:
   build:
     name: Magick.Native Q8 ${{ matrix.arch }} (macOS 13.0)
-    # One leg at a time. macos-14 queues for a free public repository while macos-15-intel starts at once,
-    # and running both means the second is cancelled before a runner ever picks it up (runner_name empty).
-    # Serialised, the arm64 leg actually runs.
+    # One leg at a time, and macos-15 rather than macos-14 for the arm64 build: macos-14 never got a runner
+    # here — the leg was cancelled a second after it started with runner_name empty — while
+    # macos-15-intel began immediately. portable.yml already uses macos-15/macos-15-intel for the same
+    # reason, so these are the two images this repository can actually get.
     strategy:
       fail-fast: false
       max-parallel: 1
       matrix:
         include:
-          - runner: macos-14
+          - runner: macos-15
             arch: arm64
           - runner: macos-15-intel
             arch: x64
