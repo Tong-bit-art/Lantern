@@ -379,6 +379,11 @@ public sealed class FolderIso632Tests : IDisposable
     [Fact]
     public void Archive_to_iso_uses_a_direct_archive_route_without_enabling_unrelated_inputs()
     {
+        // The archive-to-iso edges belong to ArchiveConverter, which is only registered when 7-Zip is available.
+        // Without it there is no zip node in the planner at all and this asserts against a graph that was never
+        // built, so it skips rather than reporting a routing bug that is really a missing engine.
+        Assert.SkipUnless(SevenZip.Locate() is not null, "Bundled 7-Zip is required: it provides the archive edges.");
+
         var planner = new ConverterCatalog([new ArchiveConverter(), new FolderIsoConverter()]).CreatePlanner();
         Assert.Equal("archive", Assert.Single(planner.Plan("zip", "iso")!.Steps).Converter.Id);
         Assert.Null(planner.Plan("png", "iso"));
