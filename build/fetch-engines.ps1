@@ -34,7 +34,7 @@
   Windows on ARM64 (-Runtime win-arm64): rhwp and 7-Zip are ARM64 builds, and "unhwp" is Unhwp's ARM64 library
   (unhwp\unhwp.dll; the build passes it to dotnet with -p:UnhwpNativeLibrary, see build-installer.ps1). rhwp and Unhwp
   have no ARM64 release: .github/workflows/windows-arm64-native.yml builds them from the pinned sources
-  (build/build-native.py), the files are hosted on dl.lantern.sh and pinned below ($arm64Pins). Both link the C runtime
+  (build/build-native.py), the files are hosted on a download mirror this fork does not yet have, and pinned below ($arm64Pins). Both link the C runtime
   statically, so nothing gets the Microsoft C++ runtime DLLs. Every other engine is the x64 download, which Windows 11
   on ARM runs under emulation.
 
@@ -86,12 +86,12 @@ foreach ($component in $manifest.components.PSObject.Properties) {
 $arm64Pins = [ordered]@{
     rhwp = @{
         Version = '0.8.7'
-        Url = 'https://dl.lantern.sh/engines/rhwp/0.8.7/rhwp-v0.8.7-windows-aarch64.zip'
+        Url = 'https://example.invalid/lantern-engines/rhwp/0.8.7/rhwp-v0.8.7-windows-aarch64.zip'
         Sha256 = 'EAC4F747115AA061208FB20E2727E67C8A8AE6AAA60D74F139A9DD6BCBA83172'
     }
     unhwp = @{
         Version = '0.13.0'
-        Url = 'https://dl.lantern.sh/engines/unhwp/0.13.0/unhwp-0.13.0-win-arm64.dll'
+        Url = 'https://example.invalid/lantern-engines/unhwp/0.13.0/unhwp-0.13.0-win-arm64.dll'
         Sha256 = '2D9760720F281E49B5D472437849E7C66704F8DF0330F378CE350D1561F16621'
     }
     # The official ARM64 installer, a 7z self-extracting archive; it is unpacked, never run.
@@ -147,7 +147,23 @@ function Get-Engine([string]$name, [switch]$X64) {
     }
     Write-Host "get  $name  $($info.Url)"
     # GitHub's release downloads answer 504 for minutes at a time, which stopped whole CI runs: try again a few times.
-    Invoke-WebRequest -Uri $info.Url -OutFile $file -UseBasicParsing -UserAgent 'Lantern-build' -MaximumRetryCount 5 -RetryIntervalSec 20
+    #
+    # A host that no longer serves the file is a different problem from a flaky one. The ARM64 pins for rhwp and
+    # unhwp point at a download mirror this fork does not own; when that mirror is unreachable the right response is
+    # to skip those two engines and let the job carry on, not to fail the build. Anything else — a checksum mismatch
+    # on a file that did download — is a real problem and still throws.
+    try {
+        Invoke-WebRequest -Uri $info.Url -OutFile $file -UseBasicParsing -UserAgent 'Lantern-build' -MaximumRetryCount 5 -RetryIntervalSec 20
+    }
+    catch {
+        Remove-Item -Path $file -ErrorAction SilentlyContinue
+        if ($Runtime -eq 'win-arm64' -and -not $X64 -and $arm64Pins.Contains($name)) {
+            Write-Host "::warning::Could not download $name for win-arm64 from $($info.Url): $($_.Exception.Message)"
+            Write-Host "::warning::Skipping ${name}: its tests will skip and no package will include it."
+            return $null
+        }
+        throw
+    }
     $hash = (Get-FileHash $file -Algorithm SHA256).Hash
     if ($hash -ne $info.Sha256) {
         Remove-Item $file
@@ -232,24 +248,29 @@ foreach ($name in $selected) {
 }
 
 if ('unhwp' -in $selected) {
-    $target = Join-Path $Destination 'unhwp'
-    Reset-Folder $target
-    Copy-Item (Get-Engine 'unhwp') (Join-Path $target 'unhwp.dll')
+    $unhwpFile = Get-Engine 'unhwp'
+    if ($unhwpFile) {
+        $target = Join-Path $Destination 'unhwp'
+        Reset-Folder $target
+        Copy-Item $unhwpFile (Join-Path $target 'unhwp.dll')
+    }
 }
 
 if ('rhwp' -in $selected) {
     $zip = Get-Engine 'rhwp'
-    Expand-Flat $zip (Join-Path $Destination 'rhwp')
-    if (-not (Get-ChildItem (Join-Path $Destination 'rhwp') -Recurse -Filter 'rhwp.exe')) { throw 'rhwp.exe not found in the archive.' }
-    # Keep rhwp.exe directly in engines/rhwp.
-    $exe = Get-ChildItem (Join-Path $Destination 'rhwp') -Recurse -Filter 'rhwp.exe' | Select-Object -First 1
-    if ($exe.DirectoryName -ne (Join-Path $Destination 'rhwp')) {
-        Get-ChildItem $exe.DirectoryName -Force | Move-Item -Destination (Join-Path $Destination 'rhwp') -Force
-    }
-    # rhwp.exe imports MSVCP140.dll and VCRUNTIME140.dll; without them Windows does not start it (#248). The ARM64
-    # build imports neither.
-    if ($Runtime -eq 'win-x64') {
-        Copy-VcRuntime (Join-Path $Destination 'rhwp')
+    if ($zip) {
+        Expand-Flat $zip (Join-Path $Destination 'rhwp')
+        if (-not (Get-ChildItem (Join-Path $Destination 'rhwp') -Recurse -Filter 'rhwp.exe')) { throw 'rhwp.exe not found in the archive.' }
+        # Keep rhwp.exe directly in engines/rhwp.
+        $exe = Get-ChildItem (Join-Path $Destination 'rhwp') -Recurse -Filter 'rhwp.exe' | Select-Object -First 1
+        if ($exe.DirectoryName -ne (Join-Path $Destination 'rhwp')) {
+            Get-ChildItem $exe.DirectoryName -Force | Move-Item -Destination (Join-Path $Destination 'rhwp') -Force
+        }
+        # rhwp.exe imports MSVCP140.dll and VCRUNTIME140.dll; without them Windows does not start it (#248). The ARM64
+        # build imports neither.
+        if ($Runtime -eq 'win-x64') {
+            Copy-VcRuntime (Join-Path $Destination 'rhwp')
+        }
     }
 }
 

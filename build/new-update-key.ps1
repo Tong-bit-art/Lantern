@@ -10,7 +10,7 @@
 
   The private key must stay outside the repository, so a path inside a Git working tree is refused. Keep a backup of it
   (and of the passphrase) somewhere only you can reach: without it, copies that carry the public key can't be updated
-  in the app any more, only by downloading a build with a new key from lantern.sh.
+  in the app any more, only by downloading a build with a new key from the releases page.
 
 .PARAMETER NoPassphrase
   Writes the private key unencrypted. Only for a key kept on encrypted storage that nobody else can read.

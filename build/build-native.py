@@ -8,7 +8,7 @@ Ubuntu 22.04 ARM64 too. SharpHook's native libraries (libuiohook) come from its 
 glibc 2.34 at most.
 
 Windows on ARM64: rhwp has no ARM64 release and Unhwp's NuGet package no win-arm64 library. They are built on a
-Windows ARM64 runner (.github/workflows/windows-arm64-native.yml), hosted on dl.lantern.sh and pinned by SHA-256 in
+Windows ARM64 runner (.github/workflows/windows-arm64-native.yml), hosted somewhere this fork can reach and pinned by SHA-256 in
 build/fetch-engines.ps1. Both link the C runtime statically (+crt-static): they import no Visual C++ runtime DLL, so
 no ARM64 copy of it has to ship next to them.
 

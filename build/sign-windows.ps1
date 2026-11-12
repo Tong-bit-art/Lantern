@@ -80,7 +80,7 @@ Write-Host "sign $($unsigned.Count) of $($programs.Count) programs (the others a
 # Several files per signtool run: each one is still signed in the cloud, but the session is opened once.
 $batch = 40
 $options = @('sign', '/sha1', $CertificateThumbprint, '/fd', 'sha256', '/tr', 'http://time.certum.pl', '/td', 'sha256',
-    '/d', 'Lantern', '/du', 'https://lantern.sh', '/q')
+    '/d', 'Lantern', '/du', 'https://github.com/Tong-bit-art/Lantern', '/q')
 for ($i = 0; $i -lt $unsigned.Count; $i += $batch) {
     $files = @($unsigned[$i..([Math]::Min($i + $batch, $unsigned.Count) - 1)])
     & $signtool @options @files

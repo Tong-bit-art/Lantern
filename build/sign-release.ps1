@@ -17,17 +17,17 @@
      update key (build/sign-checksums.ps1, -UpdateKey), which writes a .sig file next to each;
   5. uploads Lantern-<version>-win-Setup.exe, the portable zip, Lantern-<version>-SHA256SUMS.txt and the .sig files to
      the draft;
-  6. copies the Windows files and their checksum signature to the download mirror, Cloudflare R2 behind
-     https://dl.lantern.sh/<version>/, and checks that each one is served there as is (no redirect, the same size). The
-     Microsoft Store takes Setup.exe from that address, because GitHub's download links redirect;
+  6. with -Mirror, also copies the Windows files and their checksum signature to a download mirror and checks that
+     each one is served there as is (no redirect, the same size). Off by default: this fork has no mirror, and
+     GitHub Releases is the download location;
   7. with -Publish, publishes the release.
 
   When the tag's Directory.Build.props carries an update key (LanternUpdatePublicKey), its builds refuse an update
   without signed checksums: the script then stops early without -UpdateKey, checks that the private key belongs to
   that public key, and doesn't publish while a SHA256SUMS file on the draft has no .sig next to it.
 
-  Needs gh (signed in), git, the .NET SDK, and Node.js with Wrangler signed in to Lantern's Cloudflare account
-  (npx wrangler login, once) unless -NoMirror. Output: build/.cache/release-<version>/out.
+  Needs gh (signed in), git and the .NET SDK.
+  Output: build/.cache/release-<version>/out.
 
 .EXAMPLE
   pwsh build/sign-release.ps1 -Version 2.1.0 -CertificateThumbprint <sha1> -UpdateKey D:\keys\lantern-update.pem
@@ -42,8 +42,8 @@ param(
     # The private update key (build/new-update-key.ps1). Defaults to $env:LANTERN_UPDATE_KEY (the path, not the key).
     [string]$UpdateKey = $env:LANTERN_UPDATE_KEY,
     [switch]$Publish,
-    # Skips the copy to the download mirror (dl.lantern.sh).
-    [switch]$NoMirror
+    # Also copy the files to a download mirror. Off by default; see the block near the upload step.
+    [switch]$Mirror
 )
 
 $ErrorActionPreference = 'Stop'
@@ -129,10 +129,13 @@ if ($UpdateKey) {
 Write-Host "upload to the draft of $tag"
 Invoke-Checked 'gh release upload' { gh release upload $tag @files @signatures --clobber }
 
-# The download mirror: R2 bucket lantern-downloads, served at dl.lantern.sh. Wrangler is pinned like the engines.
-if (-not $NoMirror) {
+# An optional extra copy at a download mirror, if this fork ever has one. Off by default: the upstream project's
+# mirror belongs to it, not to this fork, so a release must not depend on it. GitHub Releases is the download location.
+# Pass -Mirror (and set $mirror below, and log wrangler in) to copy there as well.
+if ($Mirror) {
     $bucket = 'lantern-downloads'
-    $mirror = "https://dl.lantern.sh/$Version"
+    # Replace with this fork's own mirror before using -Mirror.
+    $mirror = "https://example.invalid/lantern/$Version"
     $types = @{ '.exe' = 'application/vnd.microsoft.portable-executable'; '.zip' = 'application/zip'; '.txt' = 'text/plain; charset=utf-8'
         '.sig' = 'text/plain; charset=utf-8' }
     $mirrored = $files + @($signatures | Where-Object { (Split-Path $_ -Leaf) -eq "Lantern-$Version-SHA256SUMS.txt.sig" })

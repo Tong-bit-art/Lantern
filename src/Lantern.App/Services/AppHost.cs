@@ -5,6 +5,7 @@ using Lantern.App.ViewModels;
 using Lantern.Core.Conversion;
 using Lantern.Core.Localization;
 using Lantern.Core.Platform;
+using Lantern.Core.Policy;
 using Lantern.Core.Settings;
 using Lantern.Core.Web;
 using Lantern.Engines;
@@ -35,6 +36,9 @@ public static class AppHost
             .SetMinimumLevel(LogLevel.Information));
 
         services.AddSingleton(sp => preloadedStore ?? new UserDataStore(dataDir, sp.GetRequiredService<ILogger<UserDataStore>>()));
+        // The conversion policy engine. Constructing the store reads policy.json (or seeds the starter
+        // policy on first run); it is a singleton so a reload is seen by every caller.
+        services.AddSingleton(sp => new PolicyStore(dataDir, sp.GetRequiredService<ILogger<PolicyStore>>()));
         services.AddSingleton<IPlatformServices>(_ =>
             OperatingSystem.IsWindows() ? new WindowsPlatformServices()
             : OperatingSystem.IsMacOS() ? new MacOSPlatformServices()

@@ -35,9 +35,9 @@ maintainer may close one without replacing it.
 - **Code signing and an update key.** Both are empty by design right now. Filling them means buying
   an Authenticode certificate and generating a key pair with `build/new-update-key.ps1`; until then
   Windows will warn about installers built from this tree and the updater does nothing.
-- **Translated READMEs**, written from the current English one rather than inherited. The 18 files
-  under `docs/_upstream-readme-translations/` describe upstream's product and are kept only as
-  reference.
+- **Translated READMEs**, written from the current English one rather than inherited. The 18 upstream
+  translations were removed: they described upstream's product, carried upstream's dead links and
+  named upstream's author. A translation submitted here should translate this README.
 - **More facts and operators** in the policy language, if real use shows which ones are missing.
   Adding them speculatively is how a rule language becomes unreadable.
 

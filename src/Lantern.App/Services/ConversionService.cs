@@ -9,6 +9,7 @@ using Lantern.Core.Conversion;
 using Lantern.Core.History;
 using Lantern.Core.Localization;
 using Lantern.Core.Platform;
+using Lantern.Core.Policy;
 using Lantern.Core.Presets;
 using Lantern.Core.Settings;
 using Lantern.Core.Web;
@@ -29,6 +30,7 @@ public sealed class ConversionService
     private readonly ILocalizer _loc;
     private readonly IPlatformServices _platform;
     private readonly WebDownloader _downloader;
+    private readonly PolicyStore? _policy;
     private readonly ILogger<ConversionService>? _log;
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, JobViewModel> _byId = new();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, TaskCompletionSource<ConversionJob>> _waiting = new();
@@ -40,7 +42,7 @@ public sealed class ConversionService
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> _clipboardJobs = new();
 
     public ConversionService(JobQueue queue, UserDataStore store, ILocalizer loc, IPlatformServices platform, WebDownloader downloader,
-        ILogger<ConversionService>? log = null)
+        ILogger<ConversionService>? log = null, PolicyStore? policy = null)
     {
         _log = log;
         _queue = queue;
@@ -48,6 +50,7 @@ public sealed class ConversionService
         _loc = loc;
         _platform = platform;
         _downloader = downloader;
+        _policy = policy;
         _queue.JobUpdated += OnJobUpdated;
         _queue.JobFinished += OnJobFinished;
     }
@@ -63,6 +66,52 @@ public sealed class ConversionService
     /// ask for a GitHub star or feedback.
     /// </summary>
     public event EventHandler? FeedbackDue;
+
+    /// <summary>
+    /// Runs the user's conversion policy over a job and hands back the preset it should use.
+    /// Returns a refusal reason when a rule vetoed the job.
+    /// </summary>
+    /// <remarks>
+    /// Skips the cases a rule cannot speak about: copying to a folder is not a conversion, and a
+    /// group or tool preset is bookkeeping rather than a target format. Applying rules there would
+    /// change what those operations mean.
+    /// </remarks>
+    private string? ApplyPolicy(IReadOnlyList<string> files, ref Preset preset)
+    {
+        if (_policy is null || files.Count == 0)
+            return null;
+        if (preset.IsGroup || preset.IsCopyToFolder || preset.IsTool)
+            return null;
+
+        try
+        {
+            var policy = _policy.Current;
+            if (policy.Rules.Count == 0)
+                return null;
+
+            var application = PolicyApplier.Apply(policy, files, preset, FindPresetById);
+            if (application.RefusedBecause is { } reason)
+                return reason;
+            if (application.Changed)
+            {
+                preset = application.Preset;
+                _log?.LogInformation("policy adjusted the preset:{NewLine}{Explanation}",
+                    Environment.NewLine, application.Explain());
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            // A broken policy must never take the converter down with it: the job runs with the
+            // preset the user chose, and the next Settings visit reports the problem.
+            _log?.LogWarning(ex, "conversion policy failed; using the preset as given");
+            return null;
+        }
+    }
+
+    /// <summary>Resolves a preset id from the user's collection, so a rule can name one.</summary>
+    private Preset? FindPresetById(string id) =>
+        _store.Presets.FirstOrDefault(p => string.Equals(p.Id, id, StringComparison.Ordinal));
 
     /// <summary>Starts converting files with a preset.</summary>
     /// <param name="files">Source files.</param>
@@ -88,6 +137,15 @@ public sealed class ConversionService
         {
             preset = preset.Clone();
             preset.Translate.Model = _store.Settings.PreferredOllamaModel;
+        }
+        // The user's conversion policy can replace or refine what the preset says. It runs after the
+        // default-output fix-up so a rule sees the folder the job would actually write to, and before
+        // the queue so the job carries the adjusted preset. A rule that refuses stops the job here.
+        if (ApplyPolicy(files, ref preset) is { } refusal)
+        {
+            web?.Dispose();
+            _log?.LogInformation("policy refused {Count} file(s): {Reason}", files.Count, refusal);
+            return null;
         }
         WebDropFetcher? fetcher = null;
         if (web is not null)

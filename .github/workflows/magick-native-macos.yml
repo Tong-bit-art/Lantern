@@ -7,7 +7,7 @@ name: ImageMagick for macOS 13
 # release pins), ImageMagick at the commit Magick.Native pins, then Magick.Native itself. The steps are upstream's own
 # (Magick.Native and Dependencies .github/workflows/main.yml), without the prebuilt dependency download.
 #
-# Run it once per Magick.NET version. The two dylibs are then hosted on dl.lantern.sh and pinned by SHA-256 in
+# Run it once per Magick.NET version. The two dylibs are then hosted somewhere this fork can reach and pinned by SHA-256 in
 # build/fetch-magick-native.ps1, which puts them into the macOS packages (and next to the Intel test builds).
 # build/check-macho-minos.py fails the package build if a Magick.NET update brings back a library that needs a newer
 # macOS.
