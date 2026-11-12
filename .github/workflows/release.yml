@@ -51,7 +51,7 @@ jobs:
         run: ./build/fetch-fonts.ps1
 
       - name: Restore Zig toolchain
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: build/.cache/zig-x86_64-windows-0.16.0
           key: zig-0.16.0-x86_64-windows

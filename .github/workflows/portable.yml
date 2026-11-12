@@ -63,7 +63,7 @@ jobs:
 
       - name: Restore native builds
         id: native-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: build/.cache/linux-native/${{ matrix.rid }}
           key: linux-native-${{ matrix.rid }}-ubuntu-22.04-${{ hashFiles('build/build-native.py') }}
@@ -82,7 +82,7 @@ jobs:
 
       - name: Restore cargo downloads
         if: steps.native-cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry/index
@@ -152,7 +152,7 @@ jobs:
         run: ./build/fetch-fonts.ps1
 
       - name: Restore engine downloads
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: build/.cache/portable-downloads
           key: portable-engines-${{ matrix.rid }}-${{ hashFiles('src/Lantern.Engines/Infrastructure/engines.json') }}
