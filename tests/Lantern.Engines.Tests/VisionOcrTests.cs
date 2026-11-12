@@ -71,7 +71,7 @@ public class OcrTextLayerTests(EngineFixture fx) : IClassFixture<EngineFixture>
     [Fact]
     public void Words_are_found_at_spaces_and_spread_over_the_line_when_they_have_no_boxes()
     {
-        Assert.Equal([(0, 5), (7, 5), (13, 1)], OcrLine.WordRanges("Lantern  reads\tA "));
+        Assert.Equal([(0, 7), (9, 5), (15, 1)], OcrLine.WordRanges("Lantern  reads\tA "));
         var line = OcrLine.Estimate("ab cd", 0.1, 0.5, 0.5, 0.1);
         Assert.Equal(["ab", "cd"], line.Words.Select(w => w.Text));
         Assert.Equal(0.1, line.Words[0].Left, 6);

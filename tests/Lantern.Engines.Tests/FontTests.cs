@@ -89,7 +89,11 @@ public class FontTests(EngineFixture fx) : IClassFixture<EngineFixture>
         Assert.NotNull(typeface);
         Assert.Equal(source.GlyphCount, typeface.GlyphCount);
         using var font = new SKFont(typeface, 48);
-        var text = sample == NameKeyed ? "Aae" : "Lantern";
+        // The sample fonts are binary fixtures built upstream and contain glyphs for the characters in
+        // 'Filee' and 'Aae' only — not for this fork's name. The string here is test data, matching the
+        // fixture, not branding: using 'Lantern' asks for glyphs that do not exist and the test fails
+        // with a zero glyph id.
+        var text = sample == NameKeyed ? "Aae" : "Filee";
         Assert.All(font.GetGlyphs(text), g => Assert.NotEqual(0, g));
         Assert.True(font.MeasureText(text) > 48);
         using var path = font.GetGlyphPath(font.GetGlyphs(text)[0]);
@@ -287,7 +291,10 @@ public class FontTests(EngineFixture fx) : IClassFixture<EngineFixture>
         Assert.Equal(0u, BinaryPrimitives.ReadUInt32LittleEndian(eot.AsSpan(12))); // not compressed, not obfuscated
         Assert.Equal(0x504C, BinaryPrimitives.ReadUInt16LittleEndian(eot.AsSpan(34)));
         var familySize = BinaryPrimitives.ReadUInt16LittleEndian(eot.AsSpan(82));
-        Assert.Equal("Lantern Test NameKeyed", System.Text.Encoding.Unicode.GetString(eot, 84, familySize));
+        // The sample fonts are binary fixtures generated upstream, so the family name embedded in them
+        // is whatever they were built with — 'Filee Test NameKeyed'. What this test is about is that
+        // the EOT conversion carries the source family name through, not that the fixture was renamed.
+        Assert.Equal("Filee Test NameKeyed", System.Text.Encoding.Unicode.GetString(eot, 84, familySize));
         var font = FontFile.Load(eot, TestContext.Current.CancellationToken);
         Assert.NotNull(font["glyf"]);
         Assert.Null(font["CFF "]);

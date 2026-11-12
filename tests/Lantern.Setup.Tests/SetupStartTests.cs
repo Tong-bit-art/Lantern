@@ -114,12 +114,16 @@ public class SetupStartTests
     [Fact]
     public void Every_language_says_the_download_is_incomplete()
     {
+        // The point of this test is that the message tells the reader where to get a working copy.
+        // It used to assert the literal 'lantern.sh', which is upstream's domain and not this fork's.
+        // Every language now names the repository, so the assertion is that the advice is actionable
+        // and identical in shape across all of them, not that a particular hostname appears.
         var english = new SetupTexts("en")["installer.error.incomplete"];
-        Assert.Contains("lantern.sh", english);
+        Assert.Contains("github.com/Tong-bit-art/Lantern", english);
         Assert.All(SetupTexts.Languages, l =>
         {
             Assert.True(SetupTexts.Load(l.Code).TryGetValue("installer.error.incomplete", out var text), l.Code);
-            Assert.Contains("lantern.sh", text);
+            Assert.Contains("github.com/Tong-bit-art/Lantern", text);
         });
     }
 
