@@ -12,10 +12,14 @@ are still outstanding.
 | Topics | 20, leading with `policy-engine`, `rules-engine`, `declarative` — the words that describe what this fork adds — then the format and platform terms |
 | Wiki | Off. It was empty, and an empty wiki is a sign of a template nobody finished. |
 | Projects | Off, same reason. |
-| Discussions | Off until there is something to discuss. `SUPPORT.md` points people at issues for now. |
+| Discussions | On, with GitHub's six default categories. Q&A is where the docs point; Issues is for bug reports. |
 | License detection | `MIT`, confirmed through the API. This needs a plain LICENSE file: the prose about derivation lives in `NOTICE` because it made licensee report `NOASSERTION`. |
 | Release | `v1.0.0`, source only, notes taken from `CHANGELOG.md`. |
 | Labels | 24. The eleven this fork added are the ones its own automations reference: `formats`, `engine`, `feature`, `translation`, `build`, `macos`, `website`, `fix`, `ci`, `chore`, `skip-changelog`. |
+| Dependabot alerts | On, with security updates. Confirmed through the API. |
+| Secret scanning | On, including push protection. This matters more than usual here: the build scripts read tokens and certificates. |
+| Branch protection | A ruleset on `main` — no deletion, no non-fast-forward — with a bypass for the repository admin. It deliberately does **not** require the CI status check yet: the workflow still fails on the ARM64 and macOS jobs, and a required check that cannot pass blocks every push, including the maintainer's. Add that rule when those jobs pass. |
+| Discussions | On, with GitHub's six default categories. Q&A is where `SUPPORT.md` and the issue template point. |
 
 ## Outstanding
 
@@ -35,20 +39,19 @@ platforms renders as a plain grey card.
 
 ### Branch protection
 
-There is no ruleset on `main`. `.github/CODEOWNERS` names the maintainer, but GitHub only requests a
-review from someone with write access to *this* repository, so the file does nothing until a rule
-requires it.
+The ruleset `protect main` is configured (`docs/ruleset-protect-main.json`), applied through the API.
+It blocks deletion and non-fast-forward pushes to `main`, with the repository admin able to bypass —
+otherwise the maintainer could not push at all, which is exactly what happened on the first attempt.
 
-To add one: **Settings → Rules → New branch ruleset**, target `main`, enable *Require a pull request
-before merging*, *Require review from Code Owners*, and *Require status checks* naming the `build`
-job. Note that the workflow currently fails overall on the ARM64 and macOS jobs, so requiring the
-whole workflow would block every merge; require the `build` job specifically.
+It does **not** require the CI status check. Requiring it while the workflow still fails on the ARM64
+and macOS jobs would block every push. That rule goes on when those jobs pass.
 
 ### Private vulnerability reporting
 
 `SECURITY.md`, `SUPPORT.md` and `CODE_OF_CONDUCT.md` all point at
-`/security/advisories/new`. That page only works if private vulnerability reporting is on:
-**Settings → Code security → Private vulnerability reporting → Enable**.
+`/security/advisories/new`. The setting is not exposed in `security_and_analysis` on this plan, and
+the dedicated API endpoints answer 404, so it cannot be turned on from here. If that page 404s for a
+reporter, enable it by hand: **Settings → Code security → Private vulnerability reporting**.
 
 ### Dependabot
 
