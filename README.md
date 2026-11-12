@@ -203,6 +203,12 @@ The full capability list is upstream's to document accurately, so it is not rest
 length. See [Filee's README](https://github.com/KnifeLemon/Filee) for the format matrix and the
 engine download behaviour.
 
+## Releasing
+
+[`docs/RELEASING.md`](docs/RELEASING.md) covers the tag, the release notes and what is still missing
+before a binary release is possible. The short version: source only, because there is no code-signing
+certificate and no update signing key, and three CI jobs need artifacts this fork does not yet host.
+
 ## Build
 
 .NET 10 SDK required.
