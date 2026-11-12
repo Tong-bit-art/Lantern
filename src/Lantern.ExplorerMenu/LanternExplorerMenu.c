@@ -1,11 +1,11 @@
-// "Convert with Filee" in the top-level Windows 11 File Explorer context menu: a tiny in-process COM server
-// (IClassFactory + IExplorerCommand) that Explorer loads through the Filee sparse package. Built with
-// build/build-explorer-menu.ps1; the package side lives in src/Filee.Platform.Windows/ExplorerMenu*.cs.
+// "Convert with Lantern" in the top-level Windows 11 File Explorer context menu: a tiny in-process COM server
+// (IClassFactory + IExplorerCommand) that Explorer loads through the Lantern sparse package. Built with
+// build/build-explorer-menu.ps1; the package side lives in src/Lantern.Platform.Windows/ExplorerMenu*.cs.
 //
 // This code runs inside explorer.exe, so it is deliberately small and defensive:
 //  - no C runtime (linked with -nostdlib): only kernel32/user32/ole32/shell32/shlwapi are used;
 //  - menu construction (GetTitle/GetState) only reads one tiny local file and shell attributes;
-//  - Invoke starts Filee.exe next to this DLL and returns immediately (no waiting, no network).
+//  - Invoke starts Lantern.exe next to this DLL and returns immediately (no waiting, no network).
 
 #define WIN32_LEAN_AND_MEAN
 #define COBJMACROS
@@ -23,14 +23,14 @@ static const IID kIidClassFactory = {0x00000001, 0x0000, 0x0000, {0xc0, 0x00, 0x
 static const IID kIidExplorerCommand = {0xa08ce4d0, 0xfa25, 0x44ab, {0xb5, 0x7c, 0xc7, 0xb1, 0xc3, 0x23, 0xe0, 0xb9}};
 static const KNOWNFOLDERID kFolderRoamingAppData = {0x3eb685db, 0x65f9, 0x4cf6, {0xa0, 0x3a, 0xe3, 0xef, 0x65, 0x72, 0x9f, 0x3d}};
 
-#define DEFAULT_TITLE L"Convert with Filee"
-// Written by the app into its data folder (%APPDATA%\Filee, which survives app updates) while the Explorer menu
+#define DEFAULT_TITLE L"Convert with Lantern"
+// Written by the app into its data folder (%APPDATA%\Lantern, which survives app updates) while the Explorer menu
 // setting is on; first line = the title in the UI language. No file = the entry is hidden, so the setting can switch
 // the entry off and on again without re-registering the package (which needs administrator rights).
 // Must match ExplorerMenuPackage.TitleFileName.
-#define TITLE_FILE L"Filee\\explorer-menu.txt"
-#define APP_EXE L"Filee.exe"
-#define LIST_PREFIX L"Filee-convert-"       // CommandLine.ListFilePrefix in the app
+#define TITLE_FILE L"Lantern\\explorer-menu.txt"
+#define APP_EXE L"Lantern.exe"
+#define LIST_PREFIX L"Lantern-convert-"       // CommandLine.ListFilePrefix in the app
 // CreateProcess accepts at most 32767 characters; longer selections go through a list file.
 #define MAX_COMMAND_LINE 32000
 
@@ -99,7 +99,7 @@ static void TextFree(Text *text)
     text->length = text->capacity = 0;
 }
 
-/// Full path of a file next to this DLL (the Filee install folder, i.e. the package's external location).
+/// Full path of a file next to this DLL (the Lantern install folder, i.e. the package's external location).
 static BOOL PathNextToModule(const WCHAR *name, WCHAR *buffer, DWORD size)
 {
     DWORD length = GetModuleFileNameW(g_module, buffer, size);
@@ -158,7 +158,7 @@ static BOOL ReadTitle(WCHAR *title, int size)
     return chars > 0;
 }
 
-/// Writes the paths (one per line, UTF-8) to a new file in %TEMP% for `Filee.exe --convert-list <file>`.
+/// Writes the paths (one per line, UTF-8) to a new file in %TEMP% for `Lantern.exe --convert-list <file>`.
 static BOOL WriteListFile(const Text *lines, WCHAR *path, DWORD size)
 {
     WCHAR folder[MAX_PATH + 1];
@@ -193,8 +193,8 @@ static BOOL WriteListFile(const Text *lines, WCHAR *path, DWORD size)
     return written;
 }
 
-/// Starts Filee.exe with the given command line and returns without waiting for it.
-static HRESULT StartFilee(const WCHAR *exe, WCHAR *commandLine)
+/// Starts Lantern.exe with the given command line and returns without waiting for it.
+static HRESULT StartLantern(const WCHAR *exe, WCHAR *commandLine)
 {
     WCHAR folder[1024];
     lstrcpynW(folder, exe, ARRAYSIZE(folder));
@@ -208,7 +208,7 @@ static HRESULT StartFilee(const WCHAR *exe, WCHAR *commandLine)
     startup.cb = sizeof(startup);
     if (!CreateProcessW(exe, commandLine, NULL, NULL, FALSE, 0, NULL, folder, &startup, &process))
         return HRESULT_FROM_WIN32(GetLastError());
-    // Explorer owns the foreground; let the running Filee bring its donut to the front.
+    // Explorer owns the foreground; let the running Lantern bring its donut to the front.
     AllowSetForegroundWindow(process.dwProcessId);
     CloseHandle(process.hThread);
     CloseHandle(process.hProcess);
@@ -364,7 +364,7 @@ static HRESULT STDMETHODCALLTYPE Command_Invoke(IExplorerCommand *self, IShellIt
     else if (added == 0)
         hr = S_FALSE;
     else if (args.length < MAX_COMMAND_LINE)
-        hr = StartFilee(exe, args.data);
+        hr = StartLantern(exe, args.data);
     else
     {
         WCHAR list[MAX_PATH + 64];
@@ -377,7 +377,7 @@ static HRESULT STDMETHODCALLTYPE Command_Invoke(IExplorerCommand *self, IShellIt
             TextAppend(&command, L"\" --convert-list \"");
             TextAppend(&command, list);
             TextAppend(&command, L"\"");
-            hr = command.failed ? E_OUTOFMEMORY : StartFilee(exe, command.data);
+            hr = command.failed ? E_OUTOFMEMORY : StartLantern(exe, command.data);
             if (FAILED(hr))
                 DeleteFileW(list);
             TextFree(&command);

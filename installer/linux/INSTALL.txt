@@ -1,11 +1,11 @@
-Run ./Filee to test the extracted app, or ./lantern-cli help for the command line.
+Run ./Lantern to test the extracted app, or ./lantern-cli help for the command line.
 
 Run ./install.sh to install for the current user. It requires Python 3, creates
 an application launcher and ~/.local/bin/lantern, and does not require root.
 Run ./install.sh --upgrade to safely upgrade an existing installation in place
 without uninstalling. Your settings, presets, history, and downloaded conversion
 engines are kept. Running without --upgrade refuses to overwrite an existing installation.
-Run ./uninstall.sh to remove this installation and Filee-downloaded engines.
+Run ./uninstall.sh to remove this installation and Lantern-downloaded engines.
 Your settings and converted files are kept. If integration cleanup fails, the
 installation is kept so you can fix the error and run the uninstaller again.
 
@@ -25,7 +25,7 @@ To recover manually:
     Inspect and remove or rename ~/.local/share/lantern/application first, then run:
     mv ~/.local/share/lantern/.backup-<pid> ~/.local/share/lantern/application
 
-Filee runs on Ubuntu 22.04 or newer and other distributions with glibc 2.35 or
+Lantern runs on Ubuntu 22.04 or newer and other distributions with glibc 2.35 or
 newer. The .NET runtime is bundled; its native system libraries are still
 required. Install the desktop and runtime dependencies with:
 
@@ -46,30 +46,30 @@ libxt6). A native Wayland session has additional input restrictions; use the
 drop window and file-manager actions, or the experimental setup below.
 
 GNOME Wayland gestures (experimental, GNOME Shell 45–51): the Linux package
-includes the “Filee donut at the cursor” Shell extension. install.sh installs
+includes the “Lantern donut at the cursor” Shell extension. install.sh installs
 it for the current user on GNOME and requests activation. Open Extensions and
 enable it. If it is missing or still running an older version, sign out and
-sign in again, then start Filee and hold Ctrl while dragging a file in Files.
+sign in again, then start Lantern and hold Ctrl while dragging a file in Files.
 No input group, sudo, or LANTERN_WAYLAND_GESTURES setting is required on GNOME.
-The Triggers page says when Filee is waiting for the extension. The extension
+The Triggers page says when Lantern is waiting for the extension. The extension
 provides pointer state over a private local socket and places the menu once
-per opening; Filee respects its configured gestures, Pause and excluded apps.
+per opening; Lantern respects its configured gestures, Pause and excluded apps.
 It does not collect typed keys. Global selection/hold gestures and Tab/wheel
 flipping during a drag are not supplied by this integration. Disabling the
 extension stops detection; LANTERN_WAYLAND_GESTURES=0 opts out on GNOME too.
-Updating Filee (in the app or with --upgrade) also updates the extension if
-Filee installed it; sign out and sign in afterwards so GNOME Shell loads it.
-The Triggers page says when the running extension doesn't match Filee.
-install.sh only replaces an extension folder that Filee installed.
+Updating Lantern (in the app or with --upgrade) also updates the extension if
+Lantern installed it; sign out and sign in afterwards so GNOME Shell loads it.
+The Triggers page says when the running extension doesn't match Lantern.
+install.sh only replaces an extension folder that Lantern installed.
 Read GNOME-WAYLAND.md in the package (docs/GNOME-WAYLAND.md in the source) for
 setup, limits and troubleshooting.
 
-Wayland gesture (experimental, KDE Plasma 6 and Hyprland, off by default): Filee reads
+Wayland gesture (experimental, KDE Plasma 6 and Hyprland, off by default): Lantern reads
 the mouse and keyboard from /dev/input through libinput, and a KWin script or Hyprland
 window rule places the donut at the cursor because Wayland apps cannot place windows.
 It needs libinput, libudev and libwayland-client (libinput10, libudev1 and
 libwayland-client0 on Ubuntu). To turn it on:
-1. Start Filee with LANTERN_WAYLAND_GESTURES=1 in its environment, for example
+1. Start Lantern with LANTERN_WAYLAND_GESTURES=1 in its environment, for example
    with the line LANTERN_WAYLAND_GESTURES=1 in ~/.config/environment.d/lantern.conf
    (takes effect after you sign in again).
 2. Add yourself to the input group, then sign out and in. Members of that group
@@ -82,9 +82,9 @@ libwayland-client0 on Ubuntu). To turn it on:
      qdbus6 org.kde.KWin /KWin reconfigure
    The qdbus tool is qdbus6, qdbus-qt6 or plain qdbus depending on the
    distribution; use whichever one you have.
-   After updating Filee, upgrade the installed script the same way, with
+   After updating Lantern, upgrade the installed script the same way, with
    --upgrade instead of --install, then run the reconfigure line again.
-   If KWin still runs the old script, turn "Filee donut" off and on again in
+   If KWin still runs the old script, turn "Lantern donut" off and on again in
    System Settings > Window Management > KWin Scripts, or sign out and back in.
    For Hyprland: Add a window rule that floats the donut, centers it on the
    cursor and turns off its border, shadow and blur. The syntax depends on the
@@ -94,7 +94,7 @@ libwayland-client0 on Ubuntu). To turn it on:
    In hyprland.lua (Hyprland 0.55 and newer):
      hl.window_rule({
          name        = "lantern-donut",
-         match       = { title = "^(Filee Donut)$" },
+         match       = { title = "^(Lantern Donut)$" },
          float       = true,
          move        = { "cursor_x-(window_w*0.5)", "cursor_y-(window_h*0.5)" },
          border_size = 0,
@@ -108,7 +108,7 @@ libwayland-client0 on Ubuntu). To turn it on:
      Or add the rule directly:
      windowrule {
          name = lantern-donut
-         match:title = ^(Filee Donut)$
+         match:title = ^(Lantern Donut)$
          float = on
          move = (cursor_x-(window_w*0.5)) (cursor_y-(window_h*0.5))
          border_size = 0
@@ -116,17 +116,17 @@ libwayland-client0 on Ubuntu). To turn it on:
          no_blur = on
      }
    In hyprland.conf (Hyprland older than 0.53, which still uses windowrulev2):
-     windowrulev2 = float, title:^(Filee Donut)$
-     windowrulev2 = move cursor -50% -50%, title:^(Filee Donut)$
-     windowrulev2 = noborder, title:^(Filee Donut)$
-     windowrulev2 = noshadow, title:^(Filee Donut)$
-     windowrulev2 = noblur, title:^(Filee Donut)$
+     windowrulev2 = float, title:^(Lantern Donut)$
+     windowrulev2 = move cursor -50% -50%, title:^(Lantern Donut)$
+     windowrulev2 = noborder, title:^(Lantern Donut)$
+     windowrulev2 = noshadow, title:^(Lantern Donut)$
+     windowrulev2 = noblur, title:^(Lantern Donut)$
    Hyprland reloads its config when the file changes; hyprctl reload forces it.
 
 Native Wayland Backend (experimental, off by default):
-By default, Filee runs through XWayland on Wayland desktops for maximum compatibility.
+By default, Lantern runs through XWayland on Wayland desktops for maximum compatibility.
 To opt into the native Wayland backend (Avalonia.Wayland):
-  Start Filee with LANTERN_USE_WAYLAND=1 in its environment.
+  Start Lantern with LANTERN_USE_WAYLAND=1 in its environment.
   (e.g., export LANTERN_USE_WAYLAND=1 or set in ~/.config/environment.d/lantern.conf).
 Limits: Wayland cannot say which window is under the cursor, so a Ctrl+drag in
 any app opens an invisible donut window. It only shows when files are dragged
@@ -139,7 +139,7 @@ the Hyprland window rule the donut opens in the wrong place.
 Packages are built and smoke-tested on Ubuntu 24.04 and started on Ubuntu 22.04
 by the automated builds.
 
-rhwp and 7-Zip are bundled. Other engines are installed from Filee settings or
+rhwp and 7-Zip are bundled. Other engines are installed from Lantern settings or
 discovered in the system. Format support depends on available native engines.
 Optional engines can require additional system libraries. In particular, calibre
 may require libxcb-cursor0, libxcb-xinerama0 and other Qt/XCB dependencies.

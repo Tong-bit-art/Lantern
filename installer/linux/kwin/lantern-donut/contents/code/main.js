@@ -1,9 +1,9 @@
-// KWin script (Plasma 6) for the experimental Wayland gesture. Wayland gives Filee no cursor position and no say
-// over where its window opens, so this moves the donut window (class "Filee", title "Filee Donut") to the cursor,
+// KWin script (Plasma 6) for the experimental Wayland gesture. Wayland gives Lantern no cursor position and no say
+// over where its window opens, so this moves the donut window (class "lantern", title "Lantern Donut") to the cursor,
 // on the Activity and desktop in use, whenever it is mapped. Install it with kpackagetool6 and enable it; see installer/linux/INSTALL.txt.
 
 function isDonut(w) {
-    return String(w.resourceClass).toLowerCase() === "filee" && w.caption === "Filee Donut";
+    return String(w.resourceClass).toLowerCase() === "lantern" && w.caption === "Lantern Donut";
 }
 
 function centreOnCursor(w) {

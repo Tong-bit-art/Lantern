@@ -5,8 +5,8 @@ import Meta from 'gi://Meta';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-const DONUT_TITLE = 'Filee Donut';
-// Filee reads the protocol version from each line and says on its Triggers page when it doesn't match, so the socket
+const DONUT_TITLE = 'Lantern Donut';
+// Lantern reads the protocol version from each line and says on its Triggers page when it doesn't match, so the socket
 // name stays the same across versions.
 const PROTOCOL_VERSION = 1;
 const SOCKET_NAME = 'pointer.sock';
@@ -14,7 +14,7 @@ const encoder = new TextEncoder();
 
 // This bridge reads only pointer coordinates, buttons, modifier state and the app under the pointer.
 // It never grabs input, changes Nautilus's copy action, reads typed keys, or accesses /dev/input.
-export default class FileeDonutExtension extends Extension {
+export default class LanternDonutExtension extends Extension {
     enable() {
         this._enabled = true;
         this._processes = new WeakMap();
@@ -25,7 +25,7 @@ export default class FileeDonutExtension extends Extension {
         this._lastState = '';
         this._pointerSource = 0;
         this._placeSource = 0;
-        const directory = GLib.build_filenamev([GLib.get_user_runtime_dir(), 'filee-gnome']);
+        const directory = GLib.build_filenamev([GLib.get_user_runtime_dir(), 'lantern-gnome']);
         GLib.mkdir_with_parents(directory, 0o700);
         this._socketFile = Gio.File.new_for_path(`${directory}/${SOCKET_NAME}`);
         if (this._socketFile.query_exists(null))
@@ -43,11 +43,11 @@ export default class FileeDonutExtension extends Extension {
             }
             this._closeConnection();
             this._connection = connection;
-            // The donut is Filee's window: with native Wayland it has no WM class or app id, so match it by process.
+            // The donut is Lantern's window: with native Wayland it has no WM class or app id, so match it by process.
             try { this._peerPid = credentials.get_unix_pid(); } catch (_error) { this._peerPid = 0; }
             this._lastState = '';
             this._lastSent = 0;
-            // Poll the pointer only while Filee is connected; _closeConnection stops it.
+            // Poll the pointer only while Lantern is connected; _closeConnection stops it.
             this._pointerSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, () => {
                 this._sendPointer();
                 return GLib.SOURCE_CONTINUE;
@@ -108,12 +108,12 @@ export default class FileeDonutExtension extends Extension {
     _isDonut(window) {
         if (window?.get_title() !== DONUT_TITLE)
             return false;
-        // X11/XWayland: WM class. Native Wayland (FILEE_USE_WAYLAND=1): the app id, which Mutter reports as the WM
-        // class, or, when Filee sets none, the connected Filee process or the process name.
+        // X11/XWayland: WM class. Native Wayland (LANTERN_USE_WAYLAND=1): the app id, which Mutter reports as the WM
+        // class, or, when Lantern sets none, the connected Lantern process or the process name.
         return [window.get_wm_class(), window.get_wm_class_instance(), window.get_gtk_application_id()]
-            .some(value => /^(filee|com\.filee\.app)$/i.test(value ?? '')) ||
+            .some(value => /^(lantern|com\.lantern\.app)$/i.test(value ?? '')) ||
             (this._peerPid > 0 && window.get_pid() === this._peerPid) ||
-            /^filee$/i.test(this._processName(window) ?? '');
+            /^lantern$/i.test(this._processName(window) ?? '');
     }
 
     _pointerWindow(x, y) {
@@ -141,7 +141,7 @@ export default class FileeDonutExtension extends Extension {
     }
 
     _sendPointer() {
-        // One async write at a time: a slow/dead Filee must never block the desktop or build an unbounded queue.
+        // One async write at a time: a slow/dead Lantern must never block the desktop or build an unbounded queue.
         if (this._writing || !this._connection)
             return;
         const [x, y, mask] = global.get_pointer();
@@ -156,7 +156,7 @@ export default class FileeDonutExtension extends Extension {
             (mask & Clutter.ModifierType.MOD1_MASK ? 2 : 0) |
             (mask & Clutter.ModifierType.SHIFT_MASK ? 4 : 0) |
             (mask & Clutter.ModifierType.SUPER_MASK ? 8 : 0);
-        // Clutter numbers middle before right; Filee numbers right before middle.
+        // Clutter numbers middle before right; Lantern numbers right before middle.
         const buttons = (mask & Clutter.ModifierType.BUTTON1_MASK ? 1 : 0) |
             (mask & Clutter.ModifierType.BUTTON3_MASK ? 2 : 0) |
             (mask & Clutter.ModifierType.BUTTON2_MASK ? 4 : 0) |
