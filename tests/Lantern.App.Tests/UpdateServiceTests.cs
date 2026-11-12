@@ -413,6 +413,35 @@ public class UpdateServiceTests
         Assert.Equal(0, announced); // no second notice while updating
     }
 
+    [AvaloniaFact] // the check publishes its answer on the UI thread
+    public async Task A_release_with_no_package_for_this_platform_is_not_offered_as_an_update()
+    {
+        // v1.0.0 of this fork is a source-only tag: the release exists, so /releases/latest answers with
+        // it, but it carries no installer and no checksums. Offering it would prompt the user, fail at the
+        // download and prompt again on the next check.
+        var updates = new UpdateService(NullLogger<UpdateService>.Instance, new EmptyRelease("v9.9.10")) { TargetPlatform = "win" };
+        var announced = 0;
+        updates.UpdateFound += (_, _) => announced++;
+
+        Assert.True(await updates.RefreshAsync(announce: false));
+
+        Assert.Null(updates.LatestVersion);
+        Assert.Null(updates.Installer);
+        Assert.Equal(0, announced);
+    }
+
+    /// <summary>A release whose only content is a tag and a note, as a source-only release is.</summary>
+    private sealed class EmptyRelease(string tag) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var json = $$"""{"tag_name":"{{tag}}","assets":[],"body":"source only"}""";
+            return Task.FromResult(request.RequestUri!.AbsolutePath.EndsWith("/releases/latest", StringComparison.Ordinal)
+                ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") }
+                : new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
+    }
+
     /// <summary>GitHub's "latest release" answer for <paramref name="tag"/>, with its installer and checksums.</summary>
     private sealed class LatestRelease(string tag) : HttpMessageHandler
     {

@@ -268,6 +268,13 @@ public sealed partial class UpdateService : ObservableObject
             (_installer, _checksums) = TargetPlatform != "unsupported"
                 ? FindFiles(json.RootElement, TargetPlatform)
                 : (null, null);
+            // A release with nothing to install is not an update: offering it would prompt the user, fail
+            // at the download, and prompt again next time. A source-only tag is exactly this case.
+            if (newer is not null && (_installer is null || _checksums is null))
+            {
+                _log.LogInformation("Update check: {Tag} has no {Platform} package; not offering it", tag, TargetPlatform);
+                newer = null;
+            }
             IReadOnlyList<ReleaseNote> notes = [];
             if (newer is not null)
             {

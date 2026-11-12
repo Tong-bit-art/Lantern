@@ -18,13 +18,24 @@ releases found".
 
 ## Tagging 1.0.0
 
+`v1.0.0` is **published as a prerelease**, not as the latest release. That is deliberate and it is
+what makes the updater behave:
+
+- GitHub's `/releases/latest` answers with the newest *non-prerelease* release. A prerelease is
+  skipped, so an installed copy does not offer an update it cannot install.
+- `UpdateService.RefreshAsync` additionally refuses to offer a release with no package for the
+  current platform, so a source-only tag cannot prompt-and-fail even if it were marked latest.
+- The README's release badge passes `include_prereleases` so it shows the tag rather than "no
+  releases found". A badge that says nothing exists while the project has a published tag is its own
+  kind of lie.
+
+Mark the release latest only once it carries a signed installer.
+
 ```bash
 git tag -a v1.0.0 -m "v1.0.0 — source only"
 git push origin v1.0.0
+gh release create v1.0.0 --title "v1.0.0 — source only" --notes-file <(sed -n '/## \[1.0.0\]/,/^---$/p' CHANGELOG.md) --prerelease
 ```
-
-Then draft the release on GitHub. `.github/release.yml` already groups pull requests by label, so
-the notes fill themselves in above the section you paste from `CHANGELOG.md`.
 
 Release body: the `## [1.0.0]` section from `CHANGELOG.md`, verbatim. It states what is new, what
 changed, what was removed, and — importantly — that the format conversion itself is upstream's work.

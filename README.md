@@ -16,7 +16,7 @@
   <img alt="Linux x64 | ARM64" src="https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-3C3489">
   <img alt="macOS preview" src="https://img.shields.io/badge/macOS-preview-534AB7">
   <img alt="MIT license" src="https://img.shields.io/github/license/Tong-bit-art/Lantern?color=6A62C9&label=license">
-  <a href="https://github.com/Tong-bit-art/Lantern/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Tong-bit-art/Lantern?color=F5A623&label=release"></a>
+  <a href="https://github.com/Tong-bit-art/Lantern/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Tong-bit-art/Lantern?include_prereleases&color=F5A623&label=release"></a>
   <img alt="Status: source only" src="https://img.shields.io/badge/status-source%20only-lightgrey">
 </p>
 
