@@ -96,6 +96,6 @@ public class GeoCompanionTests(EngineFixture fx) : IClassFixture<EngineFixture>
     [Fact]
     public void The_geospatial_donut_offers_compress_into_one_archive()
     {
-        Assert.Contains("zip-all", BuiltInData.GeoProfile().BackPresetIds);
+        Assert.Contains("zip-all", BuiltInData.GeoProfile().BackPresetIds ?? []);
     }
 }
