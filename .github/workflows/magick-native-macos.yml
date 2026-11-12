@@ -135,27 +135,29 @@ jobs:
       # build/fetch-magick-native.ps1 need, and an artifact URL expires. Off unless asked.
       - name: Publish to a release
         if: ${{ inputs.publish }}
+        working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.tag }}
+          REPO: ${{ github.repository }}
         run: |
-          if ! gh release view "$TAG" --json assets >/dev/null 2>&1; then
-            gh release create "$TAG" --title "Native engines $TAG" \
+          if ! gh release view "$TAG" --repo "$REPO" --json assets >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$REPO" --title "Native engines $TAG" \
               --notes "Prebuilt native engines this fork pins. Not an application release." --prerelease
           fi
-          existing=$(gh release view "$TAG" --json assets --jq '.assets[].name' 2>/dev/null || true)
+          existing=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' 2>/dev/null || true)
           for file in out/*; do
             name=$(basename "$file")
             [ "$name" = "SHA256SUMS.txt" ] && continue
             if printf '%s\n' "$existing" | grep -qxF "$name"; then
-              gh release upload "$TAG" "$file" --clobber
+              gh release upload "$TAG" "$file" --repo "$REPO" --clobber
             else
-              gh release upload "$TAG" "$file"
+              gh release upload "$TAG" "$file" --repo "$REPO"
             fi
           done
           echo "::notice::Pin these in build/fetch-magick-native.ps1:"
           for file in out/*; do
             [ "$(basename "$file")" = "SHA256SUMS.txt" ] && continue
-            echo "https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG/$(basename "$file")"
+            echo "https://github.com/$REPO/releases/download/$TAG/$(basename "$file")"
           done
           cat out/SHA256SUMS.txt
