@@ -27,8 +27,8 @@ $pins = @{
         sha256 = 'd8c4f6733e50e3457d5324291d1f96cb859d8f2e8983c94fd405b07c89a14e6d'
     }
     'osx-x64' = @{
-        url = 'https://example.invalid/lantern-engines/magick-native/2026.1010.1943/Magick.Native-Q8-x64.dll.dylib'
-        sha256 = '40852de95f53128cb0a77edc6857eb62d0e866ef1c34de42673b539c1bd4a898'
+        url = 'https://github.com/Tong-bit-art/Lantern/releases/download/native-magick-macos/Magick.Native-Q8-x64.dll.dylib'
+        sha256 = '84d7fc57c617f42bcc013683d97db93ba086847aa29ffbf687ccfa1688c47ac5'
     }
 }
 
