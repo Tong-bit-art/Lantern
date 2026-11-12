@@ -3,3 +3,6 @@ obj/
 *.user
 .vs/
 .idea/
+
+# Build scratch: downloaded engines, packaged installers, sandbox runs.
+build/.cache/

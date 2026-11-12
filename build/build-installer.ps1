@@ -178,7 +178,7 @@ if ($CheckOnly) {
         if (-not (Test-Path (Join-Path $installed $file))) { throw "Setup did not install $file" }
     }
     $registry = Get-Content (Join-Path $sandbox 'registry.json') -Raw
-    if ($registry -notmatch 'C8686E06-8327-40A2-B0F7-3DEDD61D9248\}_is1' -or $registry -notmatch 'uninstall\.exe') { throw 'Setup did not write the uninstall entry' }
+    if ($registry -notmatch '891211E8-307E-4D05-BF33-98BDC7D7383C\}_is1' -or $registry -notmatch 'uninstall\.exe') { throw 'Setup did not write the uninstall entry' }
     if (-not (Test-Path (Join-Path $sandbox 'Public\Desktop\Lantern.lnk'))) { throw 'Setup did not create the desktop shortcut' }
     Invoke-Setup $setupExe @()
     Invoke-Setup (Join-Path $installed 'uninstall.exe') @()

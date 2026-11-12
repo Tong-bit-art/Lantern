@@ -628,11 +628,13 @@ have no semibold) instead of the app's embedded Noto fonts.
   in (`FileSwap`: replaced and obsolete files are renamed into a backup, which works for files in use) and writes the
   uninstall entry, the shortcuts and PATH. Any failure until then puts everything back. Lantern's own settings (Explorer
   menu, start at sign-in, engines, a picked language) are handed to Lantern on its command line, as before.
-- **Updates from 1.x**: the uninstall key stays `{C8686E06-8327-40A2-B0F7-3DEDD61D9248}_is1` (Inno Setup's AppId), so
-  Apps & Features keeps one Lantern. `PreviousInstall` reads the folder and choices of an Inno Setup installation; an
-  update keeps the folder and what is registered now (desktop shortcut, PATH, the top-level menu package), removes
-  `unins000.*` and every file 2.0 doesn't have, and rewrites the key without the `Inno Setup: …` values. The app
-  counts as installed when `uninstall.exe` (or 1.x's `unins000.exe`) is next to it (`UpdateService.IsInstalled`).
+- **Updates from 1.x**: upstream kept the original Inno Setup AppId so Apps & Features showed one Filee. Lantern has
+  its own AppId (`{891211E8-307E-4D05-BF33-98BDC7D7383C}_is1`), so it installs beside a Filee installation rather than
+  replacing it; a machine that ran both keeps two entries. `PreviousInstall` reads the folder and choices of a previous
+  Lantern installation; an update keeps the folder and what is registered now (desktop shortcut, PATH, the top-level
+  menu package), removes `unins000.*` and every file 2.0 doesn't have, and rewrites the key without the
+  `Inno Setup: …` values. The app counts as installed when `uninstall.exe` (or 1.x's `unins000.exe`) is next to it
+  (`UpdateService.IsInstalled`).
 - **Uninstall**: `uninstall.exe` is Setup without its payload. Run from the install folder it copies itself to
   `%TEMP%` and waits for the copy, which removes what `uninstall.json` lists (other files in the folder stay), the
   shortcuts, the PATH entry and the key. `Lantern.exe --uninstall-cleanup` runs as the signed-in user (`RunAsSignedInUser`):
