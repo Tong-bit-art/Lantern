@@ -101,6 +101,16 @@ jobs:
 
       # Dependencies' install script covers Magick.Native's build tools too; running both fails, as both uninstall
       # the same Homebrew packages.
+      # The macos-15 image has shipped with a Homebrew whose zstd dylib is missing, and every formula
+      # download then fails with "tried: /opt/homebrew/opt/zstd/lib/libzstd.1.dylib (no such file)" — the
+      # build stops at install tools before compiling anything. Reinstalling zstd is what fixes it; when the
+      # image already has it, brew says so and nothing changes.
+      - name: Repair Homebrew's zstd
+        run: |
+          brew list zstd >/dev/null 2>&1 && brew uninstall --ignore-dependencies zstd >/dev/null 2>&1 || true
+          brew install zstd
+          brew --prefix zstd
+
       - name: Install build tools
         working-directory: dependencies
         run: ./.github/build/macos-${{ matrix.arch }}/install.sh
