@@ -13,6 +13,7 @@
 // needs rules: "this drop is a stack of paperwork, merge it" is a statement about the batch.
 
 using Lantern.Core.Formats;
+using Lantern.Core.Platform;
 using Lantern.Core.Presets;
 
 namespace Lantern.Core.Policy;
@@ -126,10 +127,69 @@ public static class PolicyApplier
                 catch (UnauthorizedAccessException)
                 {
                 }
+
+                // Whether the output would land on the source itself. OutputPathResolver refuses that
+                // case outright; this fact lets a rule say so, and without it a rule that names it
+                // silently never fires.
+                facts.Set("destination.would_overwrite_source", WouldOverwriteSource(first, preset, targetOverride));
             }
         }
 
         return facts;
+    }
+
+    /// <summary>
+    /// True when the preset's first-choice output path would be the source file itself.
+    /// </summary>
+    /// <remarks>
+    /// This is a hypothetical, and it is worth being precise about what it means.
+    /// <see cref="OutputPathResolver.Resolve"/> never returns the source path: when the first candidate
+    /// collides with the source it renames the output to "name (2)" and returns that. So an overwrite
+    /// cannot actually happen, and this fact does not prevent one.
+    /// <para>
+    /// What it reports is that the preset's own naming rules pointed straight at the input, which is the
+    /// situation a user wants to be told about — the file was renamed out of the way, and a rule can say
+    /// so. Claiming more than that in the rule's description would be a lie about what the code does.
+    /// </para>
+    /// </remarks>
+    private static bool WouldOverwriteSource(string source, Preset preset, string? targetOverride)
+    {
+        if (Directory.Exists(source))
+            return false;
+
+        var target = (targetOverride ?? preset.TargetFormat).TrimStart('.').ToLowerInvariant();
+        var sourceExtension = Path.GetExtension(source).TrimStart('.').ToLowerInvariant();
+
+        // A conversion to a different extension cannot land on the source, so the question does not arise.
+        if (!string.Equals(target, sourceExtension, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        // Reproduce the first candidate exactly as Resolve() builds it, before its disambiguation loop.
+        var tokens = new OutputPathResolver.Tokens(source, preset.Name, Index: 0, Now: DateTime.Now);
+        var rule = preset.Output;
+        var sourceDir = string.IsNullOrWhiteSpace(rule.SourceFolder)
+            ? Path.GetDirectoryName(Path.GetFullPath(source)) ?? ""
+            : Path.GetFullPath(rule.SourceFolder);
+
+        var directory = rule.Location switch
+        {
+            OutputLocation.Subfolder => Path.Combine(sourceDir, rule.SubfolderName),
+            OutputLocation.CustomFolder when !string.IsNullOrWhiteSpace(rule.CustomFolder) => rule.CustomFolder,
+            _ => sourceDir,
+        };
+
+        var sourceName = FormatRegistry.NameWithoutExtension(source);
+        var name = OutputPathResolver.Rename(
+            OutputPathResolver.ExpandPattern(rule.FileNamePattern, tokens),
+            rule.Renames);
+        if (string.IsNullOrWhiteSpace(name))
+            name = sourceName;
+
+        var candidate = Path.Combine(directory, $"{name}.{target}");
+        return string.Equals(
+            Path.GetFullPath(candidate),
+            Path.GetFullPath(source),
+            FileSystemPaths.Comparison);
     }
 
     /// <summary>
@@ -154,8 +214,13 @@ public static class PolicyApplier
         var qualityChanged = action.Quality is { } q && q != basis.Image.Quality;
         var edgeChanged = action.MaxEdgePixels is { } e
             && !(basis.Image.Resize == ResizeMode.LongEdge && basis.Image.LongEdge == e);
+        var folderChanged = !string.IsNullOrWhiteSpace(action.OutputFolder)
+            && !(basis.Output.Location == OutputLocation.CustomFolder
+                 && string.Equals(basis.Output.CustomFolder, action.OutputFolder, FileSystemPaths.Comparison));
+        var nameChanged = !string.IsNullOrWhiteSpace(action.NamePattern)
+            && !string.Equals(basis.Output.FileNamePattern, action.NamePattern, StringComparison.Ordinal);
 
-        if (!replaced && !targetChanged && !qualityChanged && !edgeChanged)
+        if (!replaced && !targetChanged && !qualityChanged && !edgeChanged && !folderChanged && !nameChanged)
             return (preset, false);
 
         var result = basis.Clone();
@@ -163,6 +228,18 @@ public static class PolicyApplier
             result.TargetFormat = action.TargetFormat!;
         if (action.Quality is { } quality)
             result.Image.Quality = Math.Clamp(quality, 1, 100);
+        if (folderChanged)
+        {
+            // An absolute or relative folder named by a rule. Relative paths resolve against the source
+            // folder at run time, which is what the preset's own "Custom folder" does.
+            result.Output.Location = OutputLocation.CustomFolder;
+            result.Output.CustomFolder = action.OutputFolder!;
+        }
+        if (nameChanged)
+        {
+            // Same token language as a preset's own name pattern ({name}, {preset}, ...).
+            result.Output.FileNamePattern = action.NamePattern!;
+        }
         if (action.MaxEdgePixels is { } maxEdge)
         {
             // LongEdge is the mode that bounds the longest side without upscaling, which is what a

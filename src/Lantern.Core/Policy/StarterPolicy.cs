@@ -123,12 +123,14 @@ public static class StarterPolicy
                 Then = new PolicyAction { NamePattern = "{name}-{preset}" },
             },
 
-            // A conversion that would write over the source is refused outright: this engine is for
-            // batch work, and batch work is exactly where one wrong rule costs a folder of originals.
+            // A conversion whose output would land on the source is refused outright. The path resolver
+            // already dodges this by renaming to "name (2)", but silently — and a batch tool that quietly
+            // renames somebody's file because the preset asked for the same name is doing something the
+            // user did not ask for. Refusing says so.
             new PolicyRule
             {
                 Id = "never-overwrite-source",
-                Description = "Refuse a conversion whose output would land on the source file itself.",
+                Description = "Refuse a job whose output naming points at the source file itself, instead of silently renaming it.",
                 Priority = 1000,
                 When = new PolicyCondition(CombineMode.All,
                 [

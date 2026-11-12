@@ -187,6 +187,99 @@ public class PolicyApplierTests
     }
 
     [Fact]
+    public void The_overwrite_guard_rule_actually_fires_when_the_output_lands_on_the_source()
+    {
+        // The starter policy has a sealed, highest-priority rule that refuses a job whose output would
+        // replace its own source. Until the applier computed destination.would_overwrite_source, that
+        // rule could never match and the guard rail was decorative. This test is the one that would
+        // have caught it.
+        var directory = Path.Combine(Path.GetTempPath(), "lantern-overwrite-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var source = Path.Combine(directory, "photo.png");
+            File.WriteAllText(source, "x");
+
+            // A preset that writes PNG into the source folder with the source's own name and no conflict
+            // policy bumping it out of the way: Resolve() hands back the source path itself.
+            var preset = new Preset { Id = "same-name", Name = "same-name", TargetFormat = "png" };
+            preset.Output.Location = OutputLocation.SameFolder;
+            preset.Output.FileNamePattern = "{name}";
+
+            var result = PolicyApplier.Apply(StarterPolicy.Build(), [source], preset, NoPresets);
+
+            Assert.Equal("policy.refused.overwrite_source", result.RefusedBecause);
+            Assert.True(result.Decision.Fired.Any(hit => hit.RuleId == "never-overwrite-source"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void The_overwrite_guard_does_not_fire_for_an_ordinary_conversion()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "lantern-overwrite2-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var source = Path.Combine(directory, "photo.png");
+            File.WriteAllText(source, "x");
+
+            // Converting to a different extension cannot land on the source.
+            var preset = new Preset { Id = "to-webp", Name = "to-webp", TargetFormat = "webp" };
+            preset.Image.Quality = 90;
+
+            var result = PolicyApplier.Apply(StarterPolicy.Build(), [source], preset, NoPresets);
+
+            Assert.Null(result.RefusedBecause);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void A_rule_can_send_the_output_to_a_named_folder()
+    {
+        var policy = new ConversionPolicy
+        {
+            Rules = [new PolicyRule { Id = "into-folder", Then = new PolicyAction { OutputFolder = "/tmp/out" } }],
+        };
+
+        var result = PolicyApplier.Apply(policy, ["a.png"], Preset(), NoPresets);
+
+        Assert.True(result.Changed);
+        Assert.Equal(OutputLocation.CustomFolder, result.Preset.Output.Location);
+        Assert.Equal("/tmp/out", result.Preset.Output.CustomFolder);
+    }
+
+    [Fact]
+    public void A_rule_can_set_the_output_name_pattern()
+    {
+        var policy = new ConversionPolicy
+        {
+            Rules = [new PolicyRule { Id = "rename", Then = new PolicyAction { NamePattern = "{name}-{preset}" } }],
+        };
+
+        var result = PolicyApplier.Apply(policy, ["a.png"], Preset(), NoPresets);
+
+        Assert.True(result.Changed);
+        Assert.Equal("{name}-{preset}", result.Preset.Output.FileNamePattern);
+    }
+
+    [Fact]
+    public void Unsupported_action_fields_are_declared_rather_than_silently_ignored()
+    {
+        // A rule naming an engine currently has no effect. This test exists so that fact stays documented:
+        // if allowedEngines becomes enforced, this assertion should change, and the change should be
+        // deliberate rather than noticed by a user whose rule quietly did nothing.
+        Assert.Contains("allowedEngines", ConversionPolicy.UnsupportedActionFields);
+    }
+
+    [Fact]
     public void The_explanation_names_the_rule_that_fired()
     {
         var policy = new ConversionPolicy

@@ -130,9 +130,13 @@ Per-file rules (converting a mixed drop with different settings for each kind) n
 hold a preset per file. That is the next piece of work, tracked in [ROADMAP.md](ROADMAP.md) rather
 than described here as if it worked.
 
-A rule can change the preset (target format, quality, longest edge), name a different preset
-outright, restrict which engines may run, or refuse the job. It cannot see inside a file: anything
+A rule can change the preset (target format, quality, longest edge), set the output folder and file-name
+pattern, name a different preset outright, or refuse the job. It cannot see inside a file: anything
 that needs the file opened belongs to the engine.
+
+`allowedEngines` is parsed, merged and shown in the decision trace, but **not enforced yet** — the
+route planner has no per-job allow-list. `ConversionPolicy.UnsupportedActionFields` names it so a user
+is told rather than quietly ignored; see [ROADMAP.md](ROADMAP.md).
 
 ### How conflicts are settled
 

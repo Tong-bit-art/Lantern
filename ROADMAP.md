@@ -27,6 +27,10 @@ maintainer may close one without replacing it.
   left and the reason the README describes batch-level behaviour rather than per-file.
 - **A settings page for rules.** Editing `policy.json` by hand is fine for the first version and
   hostile to everyone else. The decision trace should be reachable from the UI.
+- **Enforce `allowedEngines`.** The field is parsed and merged, and it appears in the decision trace,
+  but the route planner has no per-job allow-list so it changes nothing. Either teach the planner to
+  take one, or drop the field — a rule that silently does nothing is worse than one that does not
+  exist. `ConversionPolicy.UnsupportedActionFields` marks it until then.
 - **Replay script for upstream snapshots.** `build/sync-upstream.ps1`, following the three categories
   in `FORK-CHANGES.md`. VSCodium does this with shell scripts and it is the single strongest signal
   that a fork intends to survive.

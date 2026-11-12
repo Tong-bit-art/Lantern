@@ -33,6 +33,13 @@ public sealed class PolicyAction
     public string? NamePattern { get; set; }
 
     /// <summary>Engine ids allowed to run this file. Empty means "no restriction".</summary>
+    /// <remarks>
+    /// Not enforced yet. Applying it needs the route planner to consider a per-job allow-list, which is a
+    /// larger change than the rest of this engine; until then a rule that names engines is accepted,
+    /// merged and reported in the decision trace, but the converter does not restrict itself.
+    /// <see cref="ConversionPolicy.UnsupportedActionFields"/> lists it so a user is told rather than
+    /// quietly ignored.
+    /// </remarks>
     public List<string> AllowedEngines { get; set; } = [];
 
     /// <summary>Stop the file from being converted, with this reason shown to the user.</summary>
@@ -207,6 +214,13 @@ public sealed class PolicyDecision
 /// </summary>
 public sealed class ConversionPolicy
 {
+    /// <summary>
+    /// Action fields a rule may set that this build does not act on. Listed so the UI and the logs can say
+    /// so, because a configuration option that silently does nothing is worse than one that is absent: the
+    /// user believes it took effect.
+    /// </summary>
+    public static IReadOnlyList<string> UnsupportedActionFields { get; } = ["allowedEngines"];
+
     public string Name { get; set; } = "default";
 
     public List<PolicyRule> Rules { get; set; } = [];
