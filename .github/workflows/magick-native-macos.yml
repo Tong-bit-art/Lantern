@@ -104,33 +104,39 @@ jobs:
       # The macos-15 arm64 image ships with a Homebrew whose zstd is missing, and every formula download
       # then fails with:
       #   tried: /opt/homebrew/opt/zstd/lib/libzstd.1.dylib (no such file)
-      # Installing zstd through brew cannot work, because the curl brew uses is itself linked against it:
-      #   dyld: Library not loaded: /opt/homebrew/opt/zstd/lib/libzstd.1.dylib
-      #   Referenced from: /opt/homebrew/Cellar/curl/8.23.0/bin/curl
-      # The cycle is broken by not using that curl: if it cannot run, it is replaced with a two-line script
-      # that calls the system curl, which links against system libraries only. Nothing is compiled, and no
-      # formula needs to download to make downloads work. x64 uses /usr/local with a working curl, so this
-      # does nothing there.
-      - name: Repair Homebrew's curl
+      # Installing zstd through brew cannot work, because brew's own tooling (curl, and whatever else was
+      # built against it) refuses to start with the same error, so the download that would install the
+      # library never leaves the machine.
+      # The cycle is broken by shimming whatever cannot start onto the system copy, which links against
+      # system libraries only. Nothing is compiled and no Cellar layout is assumed. x64 uses /usr/local and
+      # is unaffected, so this only acts where something is actually broken.
+      - name: Repair Homebrew's tools
         run: |
           prefix=$(brew --prefix)
-          broken=0
-          for curl_bin in "$prefix"/Cellar/curl/*/bin/curl; do
-            [ -e "$curl_bin" ] || continue
-            if "$curl_bin" --version >/dev/null 2>&1; then
-              echo "$curl_bin runs"
+          echo "prefix=$prefix"
+          for broken in "$prefix"/Cellar/curl/*/bin/curl "$prefix"/opt/curl/bin/curl; do
+            [ -e "$broken" ] || continue
+            if "$broken" --version >/dev/null 2>&1; then
+              echo "ok: $broken"
               continue
             fi
-            echo "::warning::$curl_bin cannot start; replacing it with the system curl"
-            mv "$curl_bin" "$curl_bin.broken"
-            printf '#!/bin/sh\nexec /usr/bin/curl "$@"\n' > "$curl_bin"
-            chmod +x "$curl_bin"
-            "$curl_bin" --version | head -1
-            broken=1
+            echo "::warning::$broken cannot start; replacing it with the system curl"
+            rm -f "$broken"
+            printf '#!/bin/sh\nexec /usr/bin/curl "$@"\n' > "$broken"
+            chmod +x "$broken"
           done
-          if [ "$broken" = 0 ]; then
-            echo "Homebrew's curl is healthy under $prefix"
+          # Whatever brew shells out to for downloads has to work before anything else can.
+          if brew --prefix >/dev/null 2>&1 && /usr/bin/curl --version >/dev/null 2>&1; then
+            echo "system curl runs; brew responds"
+          else
+            echo "::error::Homebrew is not usable on this image"; exit 1
           fi
+          # Show what is still missing so the next failure explains itself.
+          for lib in zstd; do
+            if [ ! -e "$prefix/opt/$lib/lib/lib$lib.1.dylib" ]; then
+              echo "::warning::$prefix/opt/$lib/lib/lib$lib.1.dylib is missing"
+            fi
+          done
 
       - name: Install build tools
         working-directory: dependencies
