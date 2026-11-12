@@ -131,32 +131,30 @@ jobs:
           else
             echo "::error::Homebrew is not usable on this image"; exit 1
           fi
-          # zstd is the one library still missing, and dyld resolves it through /opt/homebrew/opt/zstd.
-          # Build it from source with clang (no Homebrew involvement) and put the real file at the exact
-          # path dyld asks for. rm -rf first, because opt/zstd may be a dangling symlink and writing through
-          # one would silently create the file somewhere else.
+          # zstd already exists on this image and dyld still reports it missing, so the file is there but
+          # unusable — almost certainly the wrong architecture for the arm64 process that loads it, which is
+          # the classic case: dyld says "no such file" for a dylib it cannot match. Build an arm64 one and
+          # put it at the exact path, replacing whatever is there.
           if [ ! -e "$prefix/opt/zstd/lib/libzstd.1.dylib" ]; then
-            echo "building zstd: $prefix/opt/zstd/lib/libzstd.1.dylib is missing"
-            tmp=$(mktemp -d)
-            /usr/bin/curl -fsSL -o "$tmp/zstd.tar.gz" https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
-            tar -xzf "$tmp/zstd.tar.gz" -C "$tmp"
-            # zstd's lib/Makefile builds the shared library as the target libzstd.<version>.dylib; the
-            # target named "lib-release" is a stub with an empty body and produces nothing, which is why an
-            # earlier attempt copied a file that was never built.
-            make -C "$tmp/zstd-1.5.7/lib" "libzstd.1.5.7.dylib" -j"$(sysctl -n hw.ncpu)" LIBDIR="$prefix/opt/zstd/lib"
-            test -f "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" || { echo "::error::make did not produce libzstd.1.5.7.dylib"; exit 1; }
-            rm -rf "$prefix/opt/zstd" "$prefix/Cellar/zstd"
-            mkdir -p "$prefix/opt/zstd/lib" "$prefix/lib"
-            cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/opt/zstd/lib/libzstd.1.dylib"
-            cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/lib/libzstd.1.dylib"
-            # A pure copy keeps the install name from LIBDIR, which is the path dyld was already asking for.
-            echo "wrote $(ls -lL "$prefix/opt/zstd/lib/libzstd.1.dylib" | wc -l) file(s)"
+            echo "zstd is absent; building it"
           else
-            echo "zstd already resolvable at $prefix/opt/zstd/lib/libzstd.1.dylib"
+            echo "zstd is present but dyld cannot use it:"
           fi
-          # Prove it: this is the loader check that was failing.
-          /usr/bin/curl --version >/dev/null && echo "curl ok"
-          ls -lL "$prefix/opt/zstd/lib/libzstd.1.dylib"
+          file "$prefix/opt/zstd/lib/libzstd.1.dylib" 2>/dev/null || true
+          tmp=$(mktemp -d)
+          /usr/bin/curl -fsSL -o "$tmp/zstd.tar.gz" https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
+          tar -xzf "$tmp/zstd.tar.gz" -C "$tmp"
+          # zstd's lib/Makefile builds the shared library as the target libzstd.<version>.dylib; the target
+          # named "lib-release" is a stub with an empty body and produces nothing.
+          make -C "$tmp/zstd-1.5.7/lib" "libzstd.1.5.7.dylib" -j"$(sysctl -n hw.ncpu)" LIBDIR="$prefix/opt/zstd/lib"
+          test -f "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" || { echo "::error::make did not produce libzstd.1.5.7.dylib"; exit 1; }
+          chmod -R u+w "$prefix/opt/zstd" 2>/dev/null || true
+          rm -rf "$prefix/opt/zstd" "$prefix/Cellar/zstd"
+          mkdir -p "$prefix/opt/zstd/lib" "$prefix/lib"
+          cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/opt/zstd/lib/libzstd.1.dylib"
+          cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/lib/libzstd.1.dylib"
+          chmod 755 "$prefix/opt/zstd/lib/libzstd.1.dylib" "$prefix/lib/libzstd.1.dylib"
+          file "$prefix/opt/zstd/lib/libzstd.1.dylib"
 
       - name: Install build tools
         working-directory: dependencies
