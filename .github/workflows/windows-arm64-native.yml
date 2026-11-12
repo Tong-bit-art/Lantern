@@ -6,12 +6,21 @@ name: Windows ARM64 native
 # them with their SHA-256.
 #
 # Run it once per rhwp or Unhwp version (Actions > Windows ARM64 native > Run workflow; a pull request that changes the
-# build runs it too). Then host the two files of the artifact at the URLs in build/fetch-engines.ps1 ($arm64Pins) and
-# fill in their sha256 from SHA256SUMS.txt: build/build-installer.ps1 -Runtime win-arm64 and CI's win-arm64 job use
-# them from then on.
+# build runs it too). Tick "publish" there and the run creates a release and uploads the two files to it, so they have a
+# stable public URL; the run prints the URLs to pin in build/fetch-engines.ps1 ($arm64Pins) along with their SHA-256.
+# Without "publish" it only stores an artifact, which expires, so a pin must never point at one.
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the files to a release of this repository (the pins can then point at it).
+        type: boolean
+        default: false
+      tag:
+        description: Release tag to publish to, e.g. native-win-arm64-0.8.7.
+        type: string
+        default: native-win-arm64
   pull_request:
     paths:
       - .github/workflows/windows-arm64-native.yml
@@ -25,6 +34,8 @@ jobs:
     name: rhwp and Unhwp (win-arm64)
     runs-on: windows-11-arm
     timeout-minutes: 90
+    permissions:
+      contents: write # only used when publish is set: creating the release and uploading to it
     defaults:
       run:
         shell: pwsh
@@ -86,3 +97,32 @@ jobs:
           name: windows-arm64-native
           path: ${{ runner.temp }}/out/
           if-no-files-found: error
+
+      # Publishes the two files to a release of this repository, which is the hosting this fork needs:
+      # fetch-engines.ps1 has pins pointing at example.invalid because there was nowhere to put them.
+      # A release asset is a stable public URL, so the pins can point at it and the win-arm64 build stops
+      # depending on a mirror somebody else owns. Off unless asked: a PR that touches the build should not
+      # create releases.
+      - name: Publish to a release
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          $files = Get-ChildItem $env:RUNNER_TEMP\out -File
+          $existing = gh release view $env:TAG --json assets --jq '.assets[].name' 2>$null
+          if (-not $existing) {
+            gh release create $env:TAG --title "Native engines $env:TAG" --notes "Prebuilt native engines this fork pins. Not an application release." --prerelease
+          }
+          foreach ($file in $files) {
+            if ($existing -and $existing -contains $file.Name) {
+              gh release upload $env:TAG $file.FullName --clobber
+            } else {
+              gh release upload $env:TAG $file.FullName
+            }
+          }
+          Write-Host "::notice::Pin these URLs in build/fetch-engines.ps1 (`$arm64Pins):"
+          foreach ($file in $files) {
+            Write-Host "https://github.com/${{ github.repository }}/releases/download/$env:TAG/$($file.Name)"
+          }
+          Get-Content (Join-Path $env:RUNNER_TEMP 'out\SHA256SUMS.txt')

@@ -7,10 +7,11 @@ name: ImageMagick for macOS 13
 # release pins), ImageMagick at the commit Magick.Native pins, then Magick.Native itself. The steps are upstream's own
 # (Magick.Native and Dependencies .github/workflows/main.yml), without the prebuilt dependency download.
 #
-# Run it once per Magick.NET version. The two dylibs are then hosted somewhere this fork can reach and pinned by SHA-256 in
-# build/fetch-magick-native.ps1, which puts them into the macOS packages (and next to the Intel test builds).
-# build/check-macho-minos.py fails the package build if a Magick.NET update brings back a library that needs a newer
-# macOS.
+# Run it once per Magick.NET version. Tick "publish" on the run and the dylibs go to a release of this repository, which
+# gives them a stable public URL to pin by SHA-256 in build/fetch-magick-native.ps1, which puts them into the macOS
+# packages (and next to the Intel test builds). Without "publish" the result is only an artifact, which expires, so a pin
+# must never point at one. build/check-macho-minos.py fails the package build if a Magick.NET update brings back a library
+# that needs a newer macOS.
 #
 # Pins for Magick.NET 15.0.0 (Directory.Packages.props): its nuspec commit 79bb870 reads Magick.Native 2026.1010.1943
 # (src/Magick.Native/Magick.Native.version), which pins ImageMagick 7.1.2-33 (src/ImageMagick/ImageMagick.commit) and
@@ -23,6 +24,15 @@ name: ImageMagick for macOS 13
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the dylibs to a release of this repository (the pins can then point at it).
+        type: boolean
+        default: false
+      tag:
+        description: Release tag to publish to, e.g. native-magick-macos-2026.1010.1943.
+        type: string
+        default: native-magick-macos
 
 permissions:
   contents: read
@@ -120,3 +130,32 @@ jobs:
           name: magick-native-${{ env.QUANTUM }}-osx-${{ matrix.arch }}
           path: out/
           if-no-files-found: error
+
+      # Publishes the dylibs to a release of this repository: a stable public URL is what the pins in
+      # build/fetch-magick-native.ps1 need, and an artifact URL expires. Off unless asked.
+      - name: Publish to a release
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! gh release view "$TAG" --json assets >/dev/null 2>&1; then
+            gh release create "$TAG" --title "Native engines $TAG" \
+              --notes "Prebuilt native engines this fork pins. Not an application release." --prerelease
+          fi
+          existing=$(gh release view "$TAG" --json assets --jq '.assets[].name' 2>/dev/null || true)
+          for file in out/*; do
+            name=$(basename "$file")
+            [ "$name" = "SHA256SUMS.txt" ] && continue
+            if printf '%s\n' "$existing" | grep -qxF "$name"; then
+              gh release upload "$TAG" "$file" --clobber
+            else
+              gh release upload "$TAG" "$file"
+            fi
+          done
+          echo "::notice::Pin these in build/fetch-magick-native.ps1:"
+          for file in out/*; do
+            [ "$(basename "$file")" = "SHA256SUMS.txt" ] && continue
+            echo "https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG/$(basename "$file")"
+          done
+          cat out/SHA256SUMS.txt
