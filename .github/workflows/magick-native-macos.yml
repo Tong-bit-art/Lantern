@@ -140,7 +140,11 @@ jobs:
             tmp=$(mktemp -d)
             /usr/bin/curl -fsSL -o "$tmp/zstd.tar.gz" https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
             tar -xzf "$tmp/zstd.tar.gz" -C "$tmp"
-            make -C "$tmp/zstd-1.5.7/lib" lib-release -j"$(sysctl -n hw.ncpu)" LIBDIR="$prefix/opt/zstd/lib" >/dev/null
+            # zstd's lib/Makefile builds the shared library as the target libzstd.<version>.dylib; the
+            # target named "lib-release" is a stub with an empty body and produces nothing, which is why an
+            # earlier attempt copied a file that was never built.
+            make -C "$tmp/zstd-1.5.7/lib" "libzstd.1.5.7.dylib" -j"$(sysctl -n hw.ncpu)" LIBDIR="$prefix/opt/zstd/lib"
+            test -f "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" || { echo "::error::make did not produce libzstd.1.5.7.dylib"; exit 1; }
             rm -rf "$prefix/opt/zstd" "$prefix/Cellar/zstd"
             mkdir -p "$prefix/opt/zstd/lib" "$prefix/lib"
             cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/opt/zstd/lib/libzstd.1.dylib"
