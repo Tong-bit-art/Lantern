@@ -15,7 +15,8 @@
   <img alt="Windows 10 | 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-3C3489">
   <img alt="Linux x64 | ARM64" src="https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-3C3489">
   <img alt="macOS preview" src="https://img.shields.io/badge/macOS-preview-534AB7">
-  <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-6A62C9">
+  <img alt="MIT license" src="https://img.shields.io/github/license/Tong-bit-art/Lantern?color=6A62C9&label=license">
+  <a href="https://github.com/Tong-bit-art/Lantern/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Tong-bit-art/Lantern?color=F5A623&label=release"></a>
   <img alt="Status: source only" src="https://img.shields.io/badge/status-source%20only-lightgrey">
 </p>
 
@@ -37,7 +38,7 @@
 > belong in [Filee's tracker](https://github.com/KnifeLemon/Filee/issues), not here.
 
 > [!NOTE]
-> **Source only, v1.0.0 — no release published yet.** Nothing to download; build from source. There
+> **Source only — `v1.0.0` is tagged and published, but there is no binary to download.** Build from source. There
 > is no code-signing certificate and no update signing key, so SmartScreen will warn about an
 > installer you build and the auto-updater is inert. Stated up front rather than buried.
 
