@@ -101,11 +101,22 @@ public class ReleaseNotesTests
         public event EventHandler? LanguageChanged { add { } remove { } }
     }
 
-    /// <summary>GitHub with 9.9.11 as the latest release, 9.9.10 required, a draft and an older release.</summary>
+    /// <summary>
+    /// GitHub with 9.9.11 as the latest release, 9.9.10 required, a draft and an older release. The newer
+    /// releases carry the two files a real one has, because the updater refuses to offer a release that
+    /// nothing can be installed from — a fixture without assets tests a case that cannot happen and hides
+    /// the other behaviour behind it.
+    /// </summary>
     private sealed class Releases : HttpMessageHandler
     {
-        private static object Release(string tag, string body, bool draft = false) =>
-            new { tag_name = tag, body, draft, prerelease = false, assets = Array.Empty<object>() };
+        private static object[] Packages(string tag) =>
+        [
+            new { name = $"Lantern-{tag}-win-Setup.exe", browser_download_url = $"https://example.test/{tag}/Lantern-{tag}-win-Setup.exe", size = 1024L },
+            new { name = $"Lantern-{tag}-SHA256SUMS.txt", browser_download_url = $"https://example.test/{tag}/Lantern-{tag}-SHA256SUMS.txt", size = 64L },
+        ];
+
+        private static object Release(string tag, string body, bool draft = false, bool package = true) =>
+            new { tag_name = tag, body, draft, prerelease = false, assets = package ? Packages(tag) : Array.Empty<object>() };
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
