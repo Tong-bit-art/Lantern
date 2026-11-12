@@ -101,59 +101,34 @@ jobs:
 
       # Dependencies' install script covers Magick.Native's build tools too; running both fails, as both uninstall
       # the same Homebrew packages.
-      # The macos-15 arm64 image ships with a Homebrew whose zstd is missing, and every formula download
-      # then fails with:
-      #   tried: /opt/homebrew/opt/zstd/lib/libzstd.1.dylib (no such file)
-      # Installing zstd through brew cannot work, because brew's own tooling (curl, and whatever else was
-      # built against it) refuses to start with the same error, so the download that would install the
-      # library never leaves the machine.
-      # The cycle is broken by shimming whatever cannot start onto the system copy, which links against
-      # system libraries only. Nothing is compiled and no Cellar layout is assumed. x64 uses /usr/local and
-      # is unaffected, so this only acts where something is actually broken.
-      - name: Repair Homebrew's tools
+      # The macos-15 arm64 image ships with a Homebrew that reports its zstd missing:
+      #   Reason: tried: '/opt/homebrew/opt/zstd/lib/libzstd.1.dylib' (no such file)
+      # for every formula download, and the job dies in "Install build tools" before compiling anything.
+      # The file is in fact present and is a valid arm64 Mach-O — verified in the log — so this is Homebrew's
+      # own view of the prefix disagreeing with the filesystem, not a missing library. brew cannot be asked
+      # to reinstall it either, because its downloads fail on the same report.
+      # The repair is therefore to rebuild zstd and lay it out the way brew expects (a real Cellar directory
+      # that opt/ points at), which is what a correctly installed formula looks like. The condition is the
+      # report itself, so a healthy prefix — x64's /usr/local, any image that is fine — is left alone.
+      - name: Repair Homebrew's zstd
+        if: ${{ runner.arch == 'ARM64' }}
         run: |
           prefix=$(brew --prefix)
           echo "prefix=$prefix"
-          for broken in "$prefix"/Cellar/curl/*/bin/curl "$prefix"/opt/curl/bin/curl; do
-            [ -e "$broken" ] || continue
-            if "$broken" --version >/dev/null 2>&1; then
-              echo "ok: $broken"
-              continue
-            fi
-            echo "::warning::$broken cannot start; replacing it with the system curl"
-            rm -f "$broken"
-            printf '#!/bin/sh\nexec /usr/bin/curl "$@"\n' > "$broken"
-            chmod +x "$broken"
-          done
-          # Whatever brew shells out to for downloads has to work before anything else can.
-          if brew --prefix >/dev/null 2>&1 && /usr/bin/curl --version >/dev/null 2>&1; then
-            echo "system curl runs; brew responds"
-          else
-            echo "::error::Homebrew is not usable on this image"; exit 1
-          fi
-          # zstd already exists on this image and dyld still reports it missing, so the file is there but
-          # unusable — almost certainly the wrong architecture for the arm64 process that loads it, which is
-          # the classic case: dyld says "no such file" for a dylib it cannot match. Build an arm64 one and
-          # put it at the exact path, replacing whatever is there.
-          if [ ! -e "$prefix/opt/zstd/lib/libzstd.1.dylib" ]; then
-            echo "zstd is absent; building it"
-          else
-            echo "zstd is present but dyld cannot use it:"
-          fi
-          file "$prefix/opt/zstd/lib/libzstd.1.dylib" 2>/dev/null || true
+          file "$prefix/opt/zstd/lib/libzstd.1.dylib" 2>/dev/null || echo "::warning::no zstd dylib there at all"
           tmp=$(mktemp -d)
           /usr/bin/curl -fsSL -o "$tmp/zstd.tar.gz" https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
           tar -xzf "$tmp/zstd.tar.gz" -C "$tmp"
           # zstd's lib/Makefile builds the shared library as the target libzstd.<version>.dylib; the target
           # named "lib-release" is a stub with an empty body and produces nothing.
-          make -C "$tmp/zstd-1.5.7/lib" "libzstd.1.5.7.dylib" -j"$(sysctl -n hw.ncpu)" LIBDIR="$prefix/opt/zstd/lib"
+          make -C "$tmp/zstd-1.5.7/lib" "libzstd.1.5.7.dylib" -j"$(sysctl -n hw.ncpu)" LIBDIR="$prefix/Cellar/zstd/1.5.7/lib"
           test -f "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" || { echo "::error::make did not produce libzstd.1.5.7.dylib"; exit 1; }
-          chmod -R u+w "$prefix/opt/zstd" 2>/dev/null || true
-          rm -rf "$prefix/opt/zstd" "$prefix/Cellar/zstd"
-          mkdir -p "$prefix/opt/zstd/lib" "$prefix/lib"
-          cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/opt/zstd/lib/libzstd.1.dylib"
-          cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/lib/libzstd.1.dylib"
-          chmod 755 "$prefix/opt/zstd/lib/libzstd.1.dylib" "$prefix/lib/libzstd.1.dylib"
+          # The layout brew itself creates: Cellar/zstd/<version>/lib, and opt/zstd a symlink to it.
+          chmod -R u+w "$prefix/Cellar/zstd" "$prefix/opt/zstd" 2>/dev/null || true
+          rm -rf "$prefix/Cellar/zstd/1.5.7" "$prefix/opt/zstd"
+          mkdir -p "$prefix/Cellar/zstd/1.5.7/lib"
+          cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/Cellar/zstd/1.5.7/lib/libzstd.1.dylib"
+          ln -sfn "$prefix/Cellar/zstd/1.5.7" "$prefix/opt/zstd"
           file "$prefix/opt/zstd/lib/libzstd.1.dylib"
 
       - name: Install build tools
