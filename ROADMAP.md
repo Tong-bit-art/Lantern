@@ -20,10 +20,11 @@ maintainer may close one without replacing it.
 
 ## Next
 
-- **Wire the policy engine into the conversion path.** The engine is complete and tested, but it is
-  not yet consulted by `ConversionService` — today it is a library with a test suite. This is the
-  single largest piece of work left, and the reason the feature is described in the README as
-  designed rather than as shipped.
+- **Per-file dispatch in the policy engine.** A decision currently applies to the whole drop, because
+  a `ConversionJob` carries one preset for all its files. That covers the case rules were written
+  for ("this drop is a paperwork stack, merge it") but not "convert the HEIC at 92 and the PNG at 82
+  in one pass", which needs a preset per file in the job model. This is the largest piece of work
+  left and the reason the README describes batch-level behaviour rather than per-file.
 - **A settings page for rules.** Editing `policy.json` by hand is fine for the first version and
   hostile to everyone else. The decision trace should be reachable from the UI.
 - **Replay script for upstream snapshots.** `build/sync-upstream.ps1`, following the three categories

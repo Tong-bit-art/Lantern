@@ -58,7 +58,7 @@
 A converter normally decides *what a file becomes*. It does not decide *how a whole batch should
 be treated*. Those are different problems, and the second one is where batch work actually hurts.
 
-Four things the preset model cannot express, and this fork is designed to:
+Four things the preset model cannot express, and this fork does:
 
 **Per-file-type defaults in one pass.** Your camera writes HEIC and your screenshot tool writes
 PNG. You want the first kept at quality 92 and the second crushed to WEBP at 82. Without rules
@@ -117,6 +117,21 @@ also how a development copy keeps its policy separate from the one you actually 
   ]
 }
 ```
+
+### What a rule can decide, and what it cannot
+
+A rule is evaluated once per drop, before the job is queued, and its decision applies to the whole
+job. That is deliberate: a `ConversionJob` carries one preset for all its files, and the case that
+actually needs rules — *"this drop is twelve documents, merge it"* — is a statement about the drop,
+not about a file.
+
+Per-file rules (converting a mixed drop with different settings for each kind) need the job model to
+hold a preset per file. That is the next piece of work, tracked in [ROADMAP.md](ROADMAP.md) rather
+than described here as if it worked.
+
+A rule can change the preset (target format, quality, longest edge), name a different preset
+outright, restrict which engines may run, or refuse the job. It cannot see inside a file: anything
+that needs the file opened belongs to the engine.
 
 ### How conflicts are settled
 
