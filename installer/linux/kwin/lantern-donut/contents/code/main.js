@@ -17,7 +17,7 @@ function centreOnCursor(w) {
 }
 
 function onCurrentActivityAndDesktop(w) {
-    // Filee's donut belongs to the Activity and desktop where Filee's main window was, and raising it there makes
+    // Lantern's donut belongs to the Activity and desktop where Lantern's main window was, and raising it there makes
     // KWin switch to them (#557): it goes where the user is instead. Without the Activities service the current
     // Activity is "", and [""] would put the donut on none, so it's left alone then.
     var activity = workspace.currentActivity;
@@ -40,7 +40,7 @@ workspace.windowAdded.connect(function (w) {
     if (!isDonut(w)) {
         return;
     }
-    // Filee also positions the window itself (twice, to cope with DPI changes), so win the last few moves.
+    // Lantern also positions the window itself (twice, to cope with DPI changes), so win the last few moves.
     var left = 4;
     onCurrentActivityAndDesktop(w); // before it's raised, or KWin goes to its Activity
     centreOnCursor(w);
