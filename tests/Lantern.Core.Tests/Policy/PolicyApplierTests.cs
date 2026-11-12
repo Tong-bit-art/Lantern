@@ -209,7 +209,7 @@ public class PolicyApplierTests
             var result = PolicyApplier.Apply(StarterPolicy.Build(), [source], preset, NoPresets);
 
             Assert.Equal("policy.refused.overwrite_source", result.RefusedBecause);
-            Assert.True(result.Decision.Fired.Any(hit => hit.RuleId == "never-overwrite-source"));
+            Assert.Contains(result.Decision.Fired, hit => hit.RuleId == "never-overwrite-source");
         }
         finally
         {
