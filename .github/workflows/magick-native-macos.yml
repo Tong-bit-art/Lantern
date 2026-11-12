@@ -101,37 +101,36 @@ jobs:
 
       # Dependencies' install script covers Magick.Native's build tools too; running both fails, as both uninstall
       # the same Homebrew packages.
-      # The macos-15 arm64 image ships with Homebrew's zstd missing, and every formula download then fails:
+      # The macos-15 arm64 image ships with a Homebrew whose zstd is missing, and every formula download
+      # then fails with:
       #   tried: /opt/homebrew/opt/zstd/lib/libzstd.1.dylib (no such file)
-      # `brew install zstd` cannot fix it, because Homebrew's own curl is linked against that zstd —
+      # Installing zstd through brew cannot work, because the curl brew uses is itself linked against it:
       #   dyld: Library not loaded: /opt/homebrew/opt/zstd/lib/libzstd.1.dylib
       #   Referenced from: /opt/homebrew/Cellar/curl/8.23.0/bin/curl
-      # so the download that would install the library fails on that same library. The way out of the cycle
-      # is to build it with tools that do not need Homebrew at all: the system curl, tar and clang. zstd's
-      # Makefile produces the dylib in well under a minute, and putting it in Homebrew's prefix is what
-      # makes the rest of Homebrew work again. x64 uses /usr/local and is unaffected, so this does nothing
-      # there.
-      - name: Repair Homebrew's zstd
+      # The cycle is broken by not using that curl: if it cannot run, it is replaced with a two-line script
+      # that calls the system curl, which links against system libraries only. Nothing is compiled, and no
+      # formula needs to download to make downloads work. x64 uses /usr/local with a working curl, so this
+      # does nothing there.
+      - name: Repair Homebrew's curl
         run: |
           prefix=$(brew --prefix)
-          if [ -e "$prefix/opt/zstd/lib/libzstd.1.dylib" ]; then
-            echo "zstd already usable under $prefix"
-            exit 0
+          broken=0
+          for curl_bin in "$prefix"/Cellar/curl/*/bin/curl; do
+            [ -e "$curl_bin" ] || continue
+            if "$curl_bin" --version >/dev/null 2>&1; then
+              echo "$curl_bin runs"
+              continue
+            fi
+            echo "::warning::$curl_bin cannot start; replacing it with the system curl"
+            mv "$curl_bin" "$curl_bin.broken"
+            printf '#!/bin/sh\nexec /usr/bin/curl "$@"\n' > "$curl_bin"
+            chmod +x "$curl_bin"
+            "$curl_bin" --version | head -1
+            broken=1
+          done
+          if [ "$broken" = 0 ]; then
+            echo "Homebrew's curl is healthy under $prefix"
           fi
-          tmp=$(mktemp -d)
-          /usr/bin/curl -fsSL -o "$tmp/zstd.tar.gz" https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
-          tar -xzf "$tmp/zstd.tar.gz" -C "$tmp"
-          make -C "$tmp/zstd-1.5.7/lib" lib-release -j"$(sysctl -n hw.ncpu)" LIBDIR="$prefix/opt/zstd/lib"
-          mkdir -p "$prefix/opt/zstd/lib" "$prefix/Cellar/zstd/1.5.7/lib"
-          cp "$tmp/zstd-1.5.7/lib/libzstd.1.5.7.dylib" "$prefix/Cellar/zstd/1.5.7/lib/"
-          ln -sfn "$prefix/Cellar/zstd/1.5.7" "$prefix/opt/zstd"
-          ln -sfn libzstd.1.5.7.dylib "$prefix/Cellar/zstd/1.5.7/lib/libzstd.1.dylib"
-          ln -sfn "$prefix/opt/zstd/lib/libzstd.1.5.7.dylib" "$prefix/opt/zstd/lib/libzstd.1.dylib"
-          ln -sfn "$prefix/opt/zstd/lib/libzstd.1.5.7.dylib" "$prefix/opt/zstd/lib/libzstd.dylib"
-          ln -sfn "$prefix/opt/zstd/lib/libzstd.1.dylib" "$prefix/lib/libzstd.1.dylib"
-          ln -sfn "$prefix/opt/zstd/lib/libzstd.dylib" "$prefix/lib/libzstd.dylib"
-          "$prefix/Cellar/curl"/*/bin/curl --version | head -1
-          ls -l "$prefix/opt/zstd/lib/libzstd.1.dylib"
 
       - name: Install build tools
         working-directory: dependencies
