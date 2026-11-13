@@ -167,9 +167,10 @@ public static class PolicyApplier
         // Splitting appends a page or part suffix to every output ("book_p1-5.pdf"), so the name the pattern
         // produces is never the one written. Without this, a split preset pointed at a file of its own
         // format looked like it would overwrite the source and was refused — which is what broke the
-        // page-range tests. The same holds when the window asks for a range first: what it writes is the
-        // chosen pages, under a name that carries them.
-        if (preset.Pdf.SplitPages || preset.Pdf.SplitEvery > 0 || preset.Pdf.SplitParts > 0 || preset.Pdf.AskPageRange)
+        // page-range tests. The same holds when a range is applied: what is written is the chosen pages,
+        // under a name that carries them, so the pattern's own name is never used.
+        if (preset.Pdf.SplitPages || preset.Pdf.SplitEvery > 0 || preset.Pdf.SplitParts > 0
+            || preset.Pdf.AskPageRange || preset.Pdf.PageRange.Length > 0)
             return false;
 
         // Reproduce the first candidate exactly as Resolve() builds it, before its disambiguation loop.
