@@ -5,15 +5,15 @@ maintainer may close one without replacing it.
 
 ## Now
 
-- **Make CI trustworthy.** The workflow inherited from upstream has never fully passed on this
-  repository. Two jobs fail for a reason that is not code: `build (win-arm64)` fails at *Fetch engines
-  for engine tests* and `portable / Linux native linux-x64` at *Build dependencies*, because both fetch
-  engine binaries from `dl.lantern.sh` — a domain this fork does not own, whose host is currently a
-  parked page. Fixing that means either hosting the pinned engine artifacts somewhere real, or making
-  those jobs skip the fetch and run a reduced test set. Until one of those lands, CI will stay red on
-  those two jobs and there will be no status badge on the README.
-- **Ship `v1.0.0`.** A source-only release with checksums, so the download and version badges stop
-  being lies. No installer until there is something meaningful to install.
+- **Make CI trustworthy.** Most of what failed here for reasons outside the code now passes: the
+  Windows ARM64 job's engines and the macOS x64 dylib are built and published by this repository, with
+  pins and hashes checked by downloading them back. What is left is narrower and named in
+  `docs/RELEASING.md`: the macOS arm64 dylib is blocked by an upstream install script that removes the
+  zstd its own formulas need, and one UI test (`AskPagesTests`, the branch that keeps the pages in one
+  file) times out and fails on its own, with the policy change stashed too. Until those two are fixed
+  there is no status badge on the README.
+- **`v1.0.0` is shipped**, as a prerelease with source only, so `/releases/latest` does not offer
+  something that cannot be installed. The download and version badges read from it.
 - **Keep the format count honest.** The README and the repository description say 280, derived from
   `FormatRegistry.Known`. Derive it at build time instead of restating it by hand in three places,
   where it will drift again.
